@@ -1,0 +1,15 @@
+{
+  "framework": "nuxtjs",
+  "installCommand": "pnpm i",
+  "buildCommand": "pnpm run build",
+  "devCommand": "hugo-obsidian -input=blogs -output=assets/indices -index -root=. && hugo server -D --gc --minify",
+  "outputDirectory": "public",
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
+  },
+  "github": {
+    "silent": true
+  }
+}
