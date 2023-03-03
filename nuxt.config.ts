@@ -20,7 +20,7 @@ export default defineNuxtConfig({
   //   'github:my-themes/awesome#v1' // Extend from a git repository
   // ],
   nitro: {
-    preset: 'vercel-edge',
+    // preset: 'vercel-edge',
     devStorage: {
       // redis: {
       //   driver: 'redis',
@@ -31,12 +31,6 @@ export default defineNuxtConfig({
       //   db: 0,
       //   tls: {}
       // }
-    },
-    externals: {
-      external: [
-        // 'ws',
-        // 'bufferutil'
-      ]
     },
     storage: {
       // redis: {
@@ -56,6 +50,16 @@ export default defineNuxtConfig({
   runtimeConfig: {
     // The private keys which are only available server-side
     apiSecret: '123',
+    mongoDbUrl: process.env.MONGODB_URI,
+    atlasDatabase: process.env.ATLAS_DATABASE,
+    atlasCollection: process.env.ATLAS_COLLECTION,
+    baiduTranslateAppid: process.env.BAIDU_TRANSLATE_APPID,
+    baiduTranslateAppsecret: process.env.BAIDU_TRANSLATE_APPSECRET,
+    pexelsApikey: process.env.PEXELS_APIKEY,
+    pixabayApikey: process.env.PIXABAY_APIKEY,
+    openaiApikey: process.env.OPENAI_APIKEY,
+    chatGptApiKey: process.env.CHATGPT_APIKEY,
+    bingnewApikey: process.env.BINGNEW_APIKEY,
     // Keys within public are also exposed client-side
     public: { apiBase: '/api' }
   },

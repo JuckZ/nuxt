@@ -4,9 +4,10 @@ import { createClient } from 'pexels'
 import { colorSchema } from '../const/constants'
 
 const salt = 'random'
+const runtimeConfig = useRuntimeConfig()
 const baiduTranslateConfig = new BaiduTranslate(
-  process.env.BAIDU_TRANSLATE_APPID || '',
-  process.env.BAIDU_TRANSLATE_APPSECRET || ''
+  runtimeConfig.baiduTranslateAppid,
+  runtimeConfig.baiduTranslateAppsecret
 )
 
 function encrypt(str: string) {
@@ -28,17 +29,18 @@ export async function doTranslate(keyword: string, from: string, to: string) {
     '&sign=' +
     sign
   const data = (await $fetch(url)) as any
+  console.log(data);
   return data.trans_result[0].dst
 }
 
-const pexelsClient = createClient(process.env.PEXELS_APIKEY || '')
+const pexelsClient = createClient(runtimeConfig.pexelsApikey)
 
 export async function doGenImage(origin: string, keyword: string) {
   switch (origin) {
     case 'pixabay':
       const data: any = await new Promise((resolve, reject) => {
         $fetch(
-          `https://pixabay.com/api/?key=${process.env.PIXABAY_APIKEY}&q=${keyword}&image_type=photo&pretty=true&min_width=600&order=popular`
+          `https://pixabay.com/api/?key=${runtimeConfig.pixabayApikey}&q=${keyword}&image_type=photo&pretty=true&min_width=600&order=popular`
         )
           .then((res) => {
             resolve(res)

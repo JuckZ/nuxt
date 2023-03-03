@@ -1,7 +1,9 @@
 import { ChatGPTAPI } from 'chatgpt';
 
+const runtimeConfig = useRuntimeConfig()
+
 const chatGptApi = new ChatGPTAPI({
-  apiKey: process.env.CHATGPT_APIKEY || ''
+  apiKey: runtimeConfig.chatGptApiKey
 })
 
 export const chatWithChatGPT = async (keyword: string) => {
