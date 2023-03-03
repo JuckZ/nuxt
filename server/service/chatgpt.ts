@@ -8,6 +8,5 @@ const chatGptApi = new ChatGPTAPI({
 
 export const chatWithChatGPT = async (keyword: string) => {
   const res = await chatGptApi.sendMessage(keyword)
-  console.log(res);
   return res.text || ''
 }

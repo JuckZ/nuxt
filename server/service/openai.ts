@@ -8,13 +8,10 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration)
 
 export const chatWithOpenAI = async (keyword: string) => {
-  console.log('chatWithOpenAI')
   const completion = await openai.createCompletion({
     model: 'text-davinci-003',
     prompt: keyword
   })
-  console.log(completion)
-
   return completion.data.choices[0].text || ''
 }
 

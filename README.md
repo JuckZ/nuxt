@@ -2,6 +2,11 @@
 
 Look at the [Nuxt 3 documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
 
+## TODO
+
+1. README.md
+2. Dialogue mode support
+
 ## Setup
 
 Make sure to install the dependencies:

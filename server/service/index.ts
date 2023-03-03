@@ -29,7 +29,6 @@ export async function doTranslate(keyword: string, from: string, to: string) {
     '&sign=' +
     sign
   const data = (await $fetch(url)) as any
-  console.log(data);
   return data.trans_result[0].dst
 }
 
