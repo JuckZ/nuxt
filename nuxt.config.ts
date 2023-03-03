@@ -1,4 +1,18 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import path from 'path';
+import fs from 'fs';
+import { config } from 'dotenv';
+
+// 先构造出.env*文件的绝对路径
+const appDirectory = fs.realpathSync(process.cwd());
+const resolveApp = (relativePath: string) => path.resolve(appDirectory, relativePath);
+const pathsDotenv = resolveApp('.env');
+config();
+// 按优先级由高到低的顺序加载.env文件
+config({ path: `${pathsDotenv}.local` }); // 加载.env.local
+config({ path: `${pathsDotenv}.development` }); // 加载.env.development
+config({ path: `${pathsDotenv}` }); // 加载.env
+
 export default defineNuxtConfig({
   // extends: [
   //   '../base', // Extend from a local layer
@@ -6,7 +20,29 @@ export default defineNuxtConfig({
   //   'github:my-themes/awesome#v1' // Extend from a git repository
   // ],
   nitro: {
-    preset: 'vercel-edge'
+    preset: 'vercel-edge',
+    devStorage: {
+      redis: {
+        driver: 'redis',
+        port: 6379,
+        host: '127.0.0.1',
+        username: '',
+        password: '',
+        db: 0,
+        tls: {}
+      }
+    },
+    storage: {
+      redis: {
+        driver: 'redis',
+        port: 6379,
+        host: '127.0.0.1',
+        username: '',
+        password: '',
+        db: 0,
+        tls: {}
+      }
+    }
   },
   typescript: {
     shim: false
