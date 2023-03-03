@@ -15,9 +15,11 @@
   },
   "dependencies": {
     "bing-chat": "^0.2.1",
+    "bufferutil": "^4.0.7",
     "chatgpt": "^5.0.5",
     "openai": "^3.2.1",
     "ora": "^6.1.2",
-    "pexels": "^1.4.0"
+    "pexels": "^1.4.0",
+    "utf-8-validate": "^6.0.3"
   }
 }

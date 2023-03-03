@@ -3,20 +3,24 @@ lockfileVersion: 5.4
 specifiers:
   '@nuxt/test-utils': ^3.2.3
   bing-chat: ^0.2.1
+  bufferutil: ^4.0.7
   chatgpt: ^5.0.5
   dotenv: ^16.0.3
   nuxt: ^3.2.3
   openai: ^3.2.1
   ora: ^6.1.2
   pexels: ^1.4.0
+  utf-8-validate: ^6.0.3
   vitest: ^0.29.2
 
 dependencies:
-  bing-chat: 0.2.1
+  bing-chat: 0.2.1_2adebc2xdjqbcvbjxkodkhadp4
+  bufferutil: 4.0.7
   chatgpt: 5.0.5
   openai: 3.2.1
   ora: 6.1.2
   pexels: 1.4.0
+  utf-8-validate: 6.0.3
 
 devDependencies:
   '@nuxt/test-utils': 3.2.3
@@ -2042,11 +2046,11 @@ packages:
       file-uri-to-path: 1.0.0
     dev: true
 
-  /bing-chat/0.2.1:
+  /bing-chat/0.2.1_2adebc2xdjqbcvbjxkodkhadp4:
     resolution: {integrity: sha512-g8xQFBDGnJog/OMfh3BitdiOYBiEUGrXG1mlmmvVK2EB7upSzP6Ur4KpqkihUrlZu/R3MqwFvTt55GKom164eA==}
     engines: {node: '>=18'}
     dependencies:
-      ws: 8.12.1
+      ws: 8.12.1_2adebc2xdjqbcvbjxkodkhadp4
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -2127,6 +2131,14 @@ packages:
     dependencies:
       base64-js: 1.5.1
       ieee754: 1.2.1
+
+  /bufferutil/4.0.7:
+    resolution: {integrity: sha512-kukuqc39WOHtdxtw4UScxF/WVnMFVSQVKhtx3AjZJzhd0RGZZldcrfSEbVsWWe6KNH253574cq5F+wpv0G9pJw==}
+    engines: {node: '>=6.14.2'}
+    requiresBuild: true
+    dependencies:
+      node-gyp-build: 4.6.0
+    dev: false
 
   /builtin-modules/3.3.0:
     resolution: {integrity: sha512-zhaCDicdLuWN5UbN5IMnFqNMhNfo919sH85y2/ea+5Yg9TsTkeZxpL+JLbp6cgYFS4sRLp3YV4S6yDuqVWHYOw==}
@@ -4063,7 +4075,6 @@ packages:
   /node-gyp-build/4.6.0:
     resolution: {integrity: sha512-NTZVKn9IylLwUzaKjkas1e4u2DLNcV4rdYagA4PWdPwW87Bi7z+BznyKSRwS/761tV/lzCGXplWsiaMjLqP2zQ==}
     hasBin: true
-    dev: true
 
   /node-releases/2.0.10:
     resolution: {integrity: sha512-5GFldHPXVG/YZmFzJvKK2zDSzPKhEp0+ZR5SVaoSag9fsL5YgHbUHDfnG5494ISANDcK4KwPXAx2xqVEydmd7w==}
@@ -5603,6 +5614,14 @@ packages:
     dev: true
     optional: true
 
+  /utf-8-validate/6.0.3:
+    resolution: {integrity: sha512-uIuGf9TWQ/y+0Lp+KGZCMuJWc3N9BHA+l/UmHd/oUHwJJDeysyTRxNQVkbzsIWfGFbRe3OcgML/i0mvVRPOyDA==}
+    engines: {node: '>=6.14.2'}
+    requiresBuild: true
+    dependencies:
+      node-gyp-build: 4.6.0
+    dev: false
+
   /util-deprecate/1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
 
@@ -5988,7 +6007,7 @@ packages:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
     dev: true
 
-  /ws/8.12.1:
+  /ws/8.12.1_2adebc2xdjqbcvbjxkodkhadp4:
     resolution: {integrity: sha512-1qo+M9Ba+xNhPB+YTWUlK6M17brTut5EXbcBaMRN5pH5dFrXz7lzz1ChFSUq3bOUl8yEvSenhHmYUNJxFzdJew==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
@@ -5999,6 +6018,9 @@ packages:
         optional: true
       utf-8-validate:
         optional: true
+    dependencies:
+      bufferutil: 4.0.7
+      utf-8-validate: 6.0.3
     dev: false
 
   /xml2js/0.4.23:

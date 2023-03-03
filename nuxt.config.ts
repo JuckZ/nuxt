@@ -32,6 +32,12 @@ export default defineNuxtConfig({
       //   tls: {}
       // }
     },
+    externals: {
+      external: [
+        // 'ws',
+        // 'bufferutil'
+      ]
+    },
     storage: {
       // redis: {
       //   driver: 'redis',
