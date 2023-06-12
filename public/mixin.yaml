@@ -103,36 +103,36 @@ mixin:
   rules:
     # - IP-CIDR,8.41.4.0/24,Netflix,no-resolve
     # OpenAI start https://github.com/v2fly/domain-list-community/blob/master/data/openai
-    - DOMAIN-KEYWORD,openai,🇺🇸美国丨CN2ˣ¹
-    - DOMAIN-SUFFIX,ai.com,🇺🇸美国丨CN2ˣ¹
-    - DOMAIN-SUFFIX,openai.com,🇺🇸美国丨CN2ˣ¹
-    - DOMAIN,chat.openai.com.cdn.cloudflare.net,🇺🇸美国丨CN2ˣ¹
-    - DOMAIN,openaiapi-site.azureedge.net,🇺🇸美国丨CN2ˣ¹
-    - DOMAIN,openaicom-api-bdcpf8c6d2e9atf6.z01.azurefd.net,🇺🇸美国丨CN2ˣ¹
-    - DOMAIN,openaicomproductionae4b.blob.core.windows.net,🇺🇸美国丨CN2ˣ¹
-    - DOMAIN,production-openaicom-storage.azureedge.net,🇺🇸美国丨CN2ˣ¹
+    - DOMAIN-KEYWORD,openai,🤖 USProxy
+    - DOMAIN-SUFFIX,ai.com,🤖 USProxy
+    - DOMAIN-SUFFIX,openai.com,🤖 USProxy
+    - DOMAIN,chat.openai.com.cdn.cloudflare.net,🤖 USProxy
+    - DOMAIN,openaiapi-site.azureedge.net,🤖 USProxy
+    - DOMAIN,openaicom-api-bdcpf8c6d2e9atf6.z01.azurefd.net,🤖 USProxy
+    - DOMAIN,openaicomproductionae4b.blob.core.windows.net,🤖 USProxy
+    - DOMAIN,production-openaicom-storage.azureedge.net,🤖 USProxy
     - DOMAIN,o33249.ingest.sentry.io,REJECT
     - DOMAIN,openaicom.imgix.net,REJECT
     # OpenAI end
-    - PROCESS-NAME,telegram,🦄 独角兽
-    - PROCESS-NAME,telegram.exe,🦄 独角兽
-    - RULE-SET,telegramcidr,🦄 独角兽
-    - DOMAIN-SUFFIX,github.com,🦄 独角兽
+    - PROCESS-NAME,telegram,🔰 AllProxy
+    - PROCESS-NAME,telegram.exe,🔰 AllProxy
+    - RULE-SET,telegramcidr,🔰 AllProxy
+    - DOMAIN-SUFFIX,github.com,🔰 AllProxy
     - DOMAIN,clash.razord.top,DIRECT
     - DOMAIN,yacd.haishan.me,DIRECT
-    - RULE-SET,proxy,🦄 独角兽
+    - RULE-SET,proxy,🔰 AllProxy
     - RULE-SET,applications,DIRECT
     - RULE-SET,private,DIRECT
     - RULE-SET,reject,REJECT
-    - RULE-SET,icloud,🦄 独角兽
-    - RULE-SET,apple,🦄 独角兽
-    - RULE-SET,google,🦄 独角兽
+    - RULE-SET,icloud,🔰 AllProxy
+    - RULE-SET,apple,🔰 AllProxy
+    - RULE-SET,google,🔰 AllProxy
     - RULE-SET,direct,DIRECT
-    - RULE-SET,gfw,🦄 独角兽
-    - RULE-SET,greatfire,🦄 独角兽
-    - RULE-SET,tld-not-cn,🦄 独角兽
+    - RULE-SET,gfw,🔰 AllProxy
+    - RULE-SET,greatfire,🔰 AllProxy
+    - RULE-SET,tld-not-cn,🔰 AllProxy
     - RULE-SET,lancidr,DIRECT
     - RULE-SET,cncidr,DIRECT
     - GEOIP,LAN,DIRECT
     - GEOIP,CN,DIRECT
-    - MATCH,🦄 独角兽
+    - MATCH,🔰 AllProxy
