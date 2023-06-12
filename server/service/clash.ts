@@ -1,5 +1,8 @@
 import axios from 'axios'
 import yaml from 'js-yaml'
+import fs from 'node:fs'
+import path from 'node:path'
+
 import { loadYamlConfig, mixin, saveYamlConfig } from '@/server/util/index'
 
 const runtimeConfig = useRuntimeConfig()
@@ -20,7 +23,9 @@ export const getClashSubscribe = async (keyword: string) => {
     }
   });
 
-  const mixinConfig = loadYamlConfig('./public/mixin.yaml') as { mixin: object }
+  const appDirectory = fs.realpathSync(process.cwd());
+  const mixConfigPath = path.resolve(appDirectory, 'public/mixin.yaml');
+  const mixinConfig = loadYamlConfig(mixConfigPath) as { mixin: object }
   let config = yaml.load(response.data) as any;
   const proxies = config['proxies'] as any[];
   const usProxies = proxies.filter(proxy => proxy.name.includes('美国')).map(proxy => proxy.name);
