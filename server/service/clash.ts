@@ -1,7 +1,5 @@
 import axios from 'axios'
 import yaml from 'js-yaml'
-import fs from 'node:fs'
-import path from 'node:path'
 
 import { loadYamlConfig, mixin, saveYamlConfig } from '@/server/util/index'
 
@@ -17,16 +15,14 @@ export const getClashSubscribe = async (keyword: string) => {
     configUrl = runtimeConfig.freeClashSubUrl
   }
   // 从 URL 下载原始配置文件
-  const response = await axios.get(configUrl, {
+  const originFileRes = await axios.get(configUrl, {
     headers: {
       "User-Agent": 'clash'
     }
   });
 
-  const appDirectory = fs.realpathSync(process.cwd());
-  const mixConfigPath = path.resolve(appDirectory, 'public/mixin.yaml');
-  const mixinConfig = loadYamlConfig(mixConfigPath) as { mixin: object }
-  let config = yaml.load(response.data) as any;
+  const mixinConfig = await axios.get('https://raw.githubusercontent.com/JuckZ/nuxt/main/public/mixin.yaml') as { mixin: object }
+  let config = yaml.load(originFileRes.data) as any;
   const proxies = config['proxies'] as any[];
   const usProxies = proxies.filter(proxy => proxy.name.includes('美国')).map(proxy => proxy.name);
   const usProxyGroup = {
