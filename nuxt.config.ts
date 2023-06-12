@@ -60,6 +60,9 @@ export default defineNuxtConfig({
     openaiApikey: process.env.OPENAI_APIKEY,
     chatGptApiKey: process.env.CHATGPT_APIKEY,
     bingnewApikey: process.env.BINGNEW_APIKEY,
+    freeClashSubUrl: process.env.FREE_CLASH_SUB_URL,
+    clashSubUrl: process.env.CLASH_SUB_URL,
+    clashSubKey: process.env.CLASH_SUB_KEY,
     // Keys within public are also exposed client-side
     public: { apiBase: '/api' }
   },
