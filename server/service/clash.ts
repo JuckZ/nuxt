@@ -21,7 +21,7 @@ export const getClashSubscribe = async (keyword: string) => {
     }
   });
 
-  const mixinConfig = await axios.get('https://raw.githubusercontent.com/JuckZ/nuxt/main/public/mixin.yaml') as { mixin: object }
+  const mixinConfig = await axios.get('https://vercel.ihave.cool/mixin.yaml') as { mixin: object }
   let config = yaml.load(originFileRes.data) as any;
   const proxies = config['proxies'] as any[];
   const usProxies = proxies.filter(proxy => proxy.name.includes('美国')).map(proxy => proxy.name);
