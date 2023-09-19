@@ -1,7 +1,7 @@
 import { createRouter, defineEventHandler, useBase } from 'h3'
-import { chatWithOpenAI, genImageWithChatGPT } from '../../service/openai'
-import { chatWithBing } from '../../service/bing'
-import { chatWithChatGPT } from '../../service/chatgpt'
+import { chatWithOpenAI, genImageWithChatGPT } from '@/server/service/openai'
+import { chatWithBing } from '@/server/service/bing'
+import { chatWithChatGPT } from '@/server/service/chatgpt'
 
 const router = createRouter()
 

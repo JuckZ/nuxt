@@ -4,15 +4,8 @@
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
-    "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
-  },
-  "devDependencies": {
-    "@nuxt/test-utils": "^3.2.3",
-    "@types/js-yaml": "^4.0.5",
-    "dotenv": "^16.0.3",
-    "nuxt": "^3.2.3",
-    "vitest": "^0.29.2"
+    "postinstall": "nuxt prepare",
+    "preview": "nuxt preview"
   },
   "dependencies": {
     "@types/base-64": "^1.0.0",
@@ -20,11 +13,18 @@
     "base-64": "^1.0.0",
     "bing-chat": "^0.2.1",
     "bufferutil": "^4.0.7",
-    "chatgpt": "^5.0.5",
+    "chatgpt": "^5.2.5",
     "js-yaml": "^4.1.0",
     "openai": "^3.2.1",
     "ora": "^6.1.2",
     "pexels": "^1.4.0",
     "utf-8-validate": "^6.0.3"
+  },
+  "devDependencies": {
+    "@nuxt/test-utils": "^3.2.3",
+    "@types/js-yaml": "^4.0.5",
+    "dotenv": "^16.0.3",
+    "nuxt": "^3.2.3",
+    "vitest": "^0.29.2"
   }
 }
