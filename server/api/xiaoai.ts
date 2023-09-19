@@ -32,7 +32,11 @@ export default defineEventHandler(async (e) => {
   let understand = true
   switch (intentSlots.intent_name) {
     case 'AskQuestion':
-      toSpeakText = await chatWithChatGPT(subHeading);
+      try {
+        toSpeakText = await chatWithChatGPT(subHeading);
+      } catch (error) {
+        console.error(error)
+      }
       content = toSpeakText;
       subHeading = subHeading.replace(/^回答/, "");
       break;
