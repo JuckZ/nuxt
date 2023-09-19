@@ -15,7 +15,9 @@
     "vitest": "^0.29.2"
   },
   "dependencies": {
+    "@types/base-64": "^1.0.0",
     "axios": "^1.4.0",
+    "base-64": "^1.0.0",
     "bing-chat": "^0.2.1",
     "bufferutil": "^4.0.7",
     "chatgpt": "^5.0.5",

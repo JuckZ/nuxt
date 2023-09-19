@@ -1,9 +1,19 @@
 lockfileVersion: '6.0'
 
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
 dependencies:
+  '@types/base-64':
+    specifier: ^1.0.0
+    version: 1.0.0
   axios:
     specifier: ^1.4.0
     version: 1.4.0
+  base-64:
+    specifier: ^1.0.0
+    version: 1.0.0
   bing-chat:
     specifier: ^0.2.1
     version: 0.2.1(bufferutil@4.0.7)(utf-8-validate@6.0.3)
@@ -1524,6 +1534,10 @@ packages:
     engines: {node: '>=10.13.0'}
     dev: true
 
+  /@types/base-64@1.0.0:
+    resolution: {integrity: sha512-AvCJx/HrfYHmOQRFdVvgKMplXfzTUizmh0tz9GFTpDePWgCY4uoKll84zKlaRoeiYiCr7c9ZnqSTzkl0BUVD6g==}
+    dev: false
+
   /@types/chai-subset@1.3.3:
     resolution: {integrity: sha512-frBecisrNGz+F4T6bcc+NLeolfiojh5FxW2klu669+8BARtyQv2C/GkNW6FUodVe4BroGMP/wER/YDGc7rEllw==}
     dependencies:
@@ -2015,6 +2029,10 @@ packages:
   /balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
     dev: true
+
+  /base-64@1.0.0:
+    resolution: {integrity: sha512-kwDPIFCGx0NZHog36dj+tHiwP4QMzsZ3AgMViUBKI0+V5n4U0ufTCUMhnQ04diaRI8EX/QcPfql7zlhZ7j4zgg==}
+    dev: false
 
   /base64-js@1.5.1:
     resolution: {integrity: sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==}

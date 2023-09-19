@@ -63,6 +63,8 @@ export default defineNuxtConfig({
     freeClashSubUrl: process.env.FREE_CLASH_SUB_URL,
     clashSubUrl: process.env.CLASH_SUB_URL,
     clashSubKey: process.env.CLASH_SUB_KEY,
+    xiaoAiKeyId: process.env.XIAOAI_KEYID,
+    xiaoAiSecret: process.env.XIAOAI_SECRET,
     // Keys within public are also exposed client-side
     public: { apiBase: '/api' }
   },
