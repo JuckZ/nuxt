@@ -31,6 +31,7 @@ export const getClashSubscribe = async (keyword: string) => {
   }
   let config = yaml.load(originFileRes.data) as any;
   const proxies = config['proxies'] as any[];
+  const proxyGroups = config['proxy-groups'] as any[];
   const usProxies = proxies.filter(proxy => proxy.name.includes('美国')).map(proxy => proxy.name);
   const usProxyGroup = {
     name: '🤖 USProxy',
@@ -40,7 +41,7 @@ export const getClashSubscribe = async (keyword: string) => {
   const allProxyGroup = {
     name: '🔰 AllProxy',
     type: 'select',
-    proxies: ['🦄 独角兽']
+    proxies: [proxyGroups[0].name]
   }
   config['proxy-groups'] = config['proxy-groups'].concat(usProxyGroup).concat(allProxyGroup);
   config = mixin(config, mixinConfig.mixin)
