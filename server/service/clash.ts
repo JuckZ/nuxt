@@ -24,7 +24,7 @@ export const getClashSubscribe = async (keyword: string) => {
   // mixinConfig.headers中的subscription-userinfo等信息可以展示流量使用情况
   let mixinConfig = { mixin: {} }
   try {
-    const mixinRes = await axios.get('https://vercel.ihave.cool/mixin.yaml')
+    const mixinRes = await axios.get('/mixin.yaml')
     mixinConfig = yaml.load(mixinRes.data) as { mixin: object };
   } catch (error) {
     console.error(error)
