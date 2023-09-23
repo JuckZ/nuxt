@@ -66,6 +66,9 @@ export default defineNuxtConfig({
     xiaoAiKeyId: process.env.XIAOAI_KEYID,
     xiaoAiSecret: process.env.XIAOAI_SECRET,
     serverHost: process.env.SERVER_HOST,
+    wenxinqianfanAppId: process.env.WENXINQIANFAN_APPID,
+    wenxinqianfanAppKey: process.env.WENXINQIANFAN_APPKEY,
+    wenxinqianfanAppSecret: process.env.WENXINQIANFAN_APPSECRET,
     // Keys within public are also exposed client-side
     public: { apiBase: '/api' }
   },

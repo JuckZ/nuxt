@@ -2,8 +2,21 @@ import { createRouter, defineEventHandler, useBase } from 'h3'
 import { chatWithOpenAI, genImageWithChatGPT } from '@/server/service/openai'
 import { chatWithBing } from '@/server/service/bing'
 import { chatWithChatGPT } from '@/server/service/chatgpt'
+import { chatWithEnBot } from '@/server/service/wenxinqianfan'
 
 const router = createRouter()
+
+router.get(
+  '/ERNIE-Bot',
+  defineEventHandler(async (e) => {
+    const query = getQuery(e)
+    const { keyword } = query
+    const res = await chatWithEnBot(keyword as string)
+    return {
+      data: res
+    }
+  })
+)
 
 router.get(
   '/OpenAI',
