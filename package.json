@@ -19,11 +19,13 @@
     "openai": "^3.2.1",
     "ora": "^6.1.2",
     "pexels": "^1.4.0",
-    "utf-8-validate": "^6.0.3"
+    "utf-8-validate": "^6.0.3",
+    "ws": "^8.13.0"
   },
   "devDependencies": {
     "@nuxt/test-utils": "^3.2.3",
     "@types/js-yaml": "^4.0.5",
+    "@types/ws": "^8.5.5",
     "dotenv": "^16.0.3",
     "nuxt": "^3.2.3",
     "vitest": "^0.29.2"

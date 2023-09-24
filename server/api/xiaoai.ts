@@ -2,11 +2,13 @@ import { XiaoAiRequest, XiaoAiJsonResponse } from '@/server/entity/XiaoAiRequest
 import { xiaoAiEncrypt } from '@/server/util';
 import { defaultResponse, verifyToken } from '@/server/service/xiaoai';
 import { chatWithChatGPT } from '@/server/service/chatgpt'
+import { chatWithEnBot } from '@/server/service/wenxinqianfan'
+import { chatWithSpark } from '@/server/service/spark'
 import * as crypto from 'crypto';
 
 const runtimeConfig = useRuntimeConfig()
 const serverHost = useRuntimeConfig().serverHost
-
+const sessionRes: Record<string, string> = {}
 export default defineEventHandler(async (e) => {
   const method = e.node.req.method!.toUpperCase();
   // const token = e.node.req.headers['Authorization'] || e.node.req.headers['authorization'];
@@ -30,10 +32,44 @@ export default defineEventHandler(async (e) => {
   let isSessionEnd = true
   let openMic = false
   let understand = true
+  let tips = ''
   switch (intentSlots.intent_name) {
     case 'AskQuestion':
       try {
-        toSpeakText = await chatWithChatGPT(subHeading);
+        toSpeakText = '小爱正在思考中，请稍等片刻';
+        chatWithSpark(subHeading).then(res => {
+          sessionRes[reqBody.session.session_id] = res
+        });
+      } catch (error) {
+        console.error(error)
+      }
+      isSessionEnd = false
+      openMic = true
+      tips = '说“继续”我会为你提供后续答案，回答完毕时会自动退出本次对话'
+      content = toSpeakText;
+      subHeading = subHeading.replace(/^回答/, "");
+      break;
+    case 'Mi_Default':
+      try {
+        if (reqBody.query === '继续') {
+          if (!sessionRes[reqBody.session.session_id]) {
+            toSpeakText = '还在思考呢，请稍等再说"继续"'
+            isSessionEnd = false
+            openMic = true
+            tips = '说“继续”我会为你提供后续答案，回答完毕时会自动退出本次对话'
+          } else {
+            toSpeakText = sessionRes[reqBody.session.session_id]
+            isSessionEnd = true
+            openMic = false
+            delete sessionRes[reqBody.session.session_id]
+            tips = '回答完毕，自动退出本次对话'
+          }
+        } else {
+          toSpeakText = '我还没学会这个技能呢'
+          isSessionEnd = true
+          openMic = false
+          tips = '回答完毕，自动退出本次对话'
+        }
       } catch (error) {
         console.error(error)
       }
@@ -77,7 +113,7 @@ export default defineEventHandler(async (e) => {
           "params": {
             "box0_subheading": subHeading,
             "box0_assistText": content,
-            // "box0_tips": "测试小贴士"
+            "box0_tips": tips
             // "box0_tips": {
             //   "content": "重试",
             //   "action": [

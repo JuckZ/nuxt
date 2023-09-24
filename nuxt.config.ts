@@ -69,6 +69,9 @@ export default defineNuxtConfig({
     wenxinqianfanAppId: process.env.WENXINQIANFAN_APPID,
     wenxinqianfanAppKey: process.env.WENXINQIANFAN_APPKEY,
     wenxinqianfanAppSecret: process.env.WENXINQIANFAN_APPSECRET,
+    sparkAppId: process.env.SPARK_APPID,
+    sparkApiKey: process.env.SPARK_APIKEY,
+    sparkApiSecret: process.env.SPARK_APISECRET,
     // Keys within public are also exposed client-side
     public: { apiBase: '/api' }
   },

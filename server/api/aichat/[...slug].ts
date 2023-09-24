@@ -2,16 +2,31 @@ import { createRouter, defineEventHandler, useBase } from 'h3'
 import { chatWithOpenAI, genImageWithChatGPT } from '@/server/service/openai'
 import { chatWithBing } from '@/server/service/bing'
 import { chatWithChatGPT } from '@/server/service/chatgpt'
-import { chatWithEnBot } from '@/server/service/wenxinqianfan'
+import { chatWithSpark } from '@/server/service/spark'
 
 const router = createRouter()
+
+router.get(
+  '/Spark',
+  defineEventHandler(async (e) => {
+    const query = getQuery(e)
+    const { keyword } = query
+    // const res = await chatWithSpark(keyword as string)
+    // return {
+    //   data: res
+    // }
+    return {
+      data: '暂未开放此调用方式'
+    }
+  })
+)
 
 router.get(
   '/ERNIE-Bot',
   defineEventHandler(async (e) => {
     const query = getQuery(e)
     const { keyword } = query
-    const res = await chatWithEnBot(keyword as string)
+    const res = await chatWithSpark(keyword as string)
     return {
       data: res
     }

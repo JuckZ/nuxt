@@ -4,6 +4,7 @@ const runtimeConfig = useRuntimeConfig()
 
 const chatModel = new ChatBaiduWenxin({
   // modelName: 'ERNIE-Bot',
+  modelName: 'ERNIE-Bot-turbo',
   baiduApiKey: runtimeConfig.wenxinqianfanAppKey,
   baiduSecretKey: runtimeConfig.wenxinqianfanAppSecret,
   streaming: false,
