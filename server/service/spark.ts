@@ -28,8 +28,11 @@ export class XinghuoClient {
   headers: any;
   ssoSessionId: any;
   conversationsCache: any;
+  isConnecting: boolean;
+  socket: any;
 
   constructor(opts: any) {
+    this.isConnecting = false;
     this.cache = opts.cache
     this.ssoSessionId = opts.ssoSessionId
     this.headers = {
@@ -143,12 +146,16 @@ export class XinghuoClient {
     }
 
     return new Promise((resolve, reject) => {
-      const socket = new WebSocket(wsUrl)
+      if(!this.socket && !this.isConnecting) {
+        this.socket = new WebSocket(wsUrl)
+        this.isConnecting = true
+      }
       let resMessage = ''
-      socket.on('open', () => {
-        socket.send(JSON.stringify(wsSendData))
+      this.socket.on('open', () => {
+        this.isConnecting = false
+        this.socket.send(JSON.stringify(wsSendData))
       })
-      socket.on('message', async (message: string) => {
+      this.socket.on('message', async (message: string) => {
         try {
           const messageData: any = JSON.parse(message)
           if (messageData.header.code != 0) {
@@ -192,7 +199,8 @@ export class XinghuoClient {
           reject(new Error(error as string))
         }
       })
-      socket.on('error', (error) => {
+      this.socket.on('error', (error: any) => {
+        this.socket = null
         reject(error)
       })
     })
