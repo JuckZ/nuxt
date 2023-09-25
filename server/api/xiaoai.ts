@@ -1,8 +1,8 @@
 import { XiaoAiRequest, XiaoAiJsonResponse } from '@/server/entity/XiaoAiRequest';
 import { xiaoAiEncrypt } from '@/server/util';
-import { defaultResponse, verifyToken } from '@/server/service/xiaoai';
-import { chatWithChatGPT } from '@/server/service/chatgpt'
-import { chatWithEnBot } from '@/server/service/wenxinqianfan'
+// import { defaultResponse, verifyToken } from '@/server/service/xiaoai';
+// import { chatWithChatGPT } from '@/server/service/chatgpt'
+// import { chatWithEnBot } from '@/server/service/wenxinqianfan'
 import { chatWithSpark } from '@/server/service/spark'
 import * as crypto from 'crypto';
 
@@ -25,7 +25,6 @@ export default defineEventHandler(async (e) => {
       raw_value: string;
     }[]
   } = JSON.parse(intent.slots)
-  // console.log(reqBody, intentSlots.intent_name, intentSlots.slots);
   let toSpeakText = ''
   let subHeading = intent.query
   let content = ''
@@ -119,15 +118,6 @@ export default defineEventHandler(async (e) => {
             "box0_subheading": subHeading,
             "box0_assistText": content,
             "box0_tips": tips
-            // "box0_tips": {
-            //   "content": "重试",
-            //   "action": [
-            //     {
-            //       "type": "requery",
-            //       "param": "重试"
-            //     },
-            //   ]
-            // }
           }
         }
       },
