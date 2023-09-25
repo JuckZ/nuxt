@@ -1,6 +1,6 @@
 {
   "framework": "nuxtjs",
-  "installCommand": "pnpm i",
+  "installCommand": "pnpm i --no-frozen-lockfile",
   "buildCommand": "pnpm run build",
   "devCommand": "hugo-obsidian -input=blogs -output=assets/indices -index -root=. && hugo server -D --gc --minify",
   "outputDirectory": "public",
