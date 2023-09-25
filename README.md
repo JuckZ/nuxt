@@ -24,7 +24,7 @@ pnpm install
 
 ## Development Server
 
-Start the development server on http://localhost:3000
+Start the development server on <http://localhost:3000>
 
 ```bash
 npm run dev
@@ -45,3 +45,12 @@ npm run preview
 ```
 
 Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+
+## Compile ntfy
+
+```powershell
+cd server/util/ntfy
+$env:GOOS = "js"
+$env:GOARCH = "wasm"
+go build -o public/ntfy.wasm server/util/ntfy/ntfy.go
+```
