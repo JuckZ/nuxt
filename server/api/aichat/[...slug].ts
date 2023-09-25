@@ -11,13 +11,13 @@ router.get(
   defineEventHandler(async (e) => {
     const query = getQuery(e)
     const { keyword } = query
-    // const res = await chatWithSpark(keyword as string)
-    // return {
-    //   data: res
-    // }
+    const res = await chatWithSpark(keyword as string)
     return {
-      data: '暂未开放此调用方式'
+      data: res
     }
+    // return {
+    //   data: '暂未开放此调用方式'
+    // }
   })
 )
 
