@@ -44,6 +44,7 @@ export default defineEventHandler(async (e) => {
         toSpeakText = '小爱正在思考中，请稍等片刻再说“继续”获取答案';
         chatWithSpark(subHeading).then(res => {
           sessionRes[reqBody.session.session_id] = res
+          console.log(res);
         });
       } catch (error) {
         console.error(error)
