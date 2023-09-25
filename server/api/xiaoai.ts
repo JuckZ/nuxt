@@ -25,7 +25,7 @@ export default defineEventHandler(async (e) => {
       raw_value: string;
     }[]
   } = JSON.parse(intent.slots)
-  console.log(reqBody, intentSlots.intent_name, intentSlots.slots);
+  // console.log(reqBody, intentSlots.intent_name, intentSlots.slots);
   let toSpeakText = ''
   let subHeading = intent.query
   let content = ''
@@ -34,6 +34,12 @@ export default defineEventHandler(async (e) => {
   let understand = true
   let tips = ''
   switch (intentSlots.intent_name) {
+    case 'Mi_Welcome':
+      toSpeakText = '你好，我是一只猪，你可以对我说，“为什么天是蓝色的？”或者告诉我“打开百度网页”'
+      isSessionEnd = false
+      openMic = true
+      tips = '你可以开始说出你的命令了'
+      break;
     case 'AskQuestion':
       try {
         toSpeakText = '小爱正在思考中，请稍等片刻';
@@ -56,16 +62,21 @@ export default defineEventHandler(async (e) => {
             toSpeakText = '还在思考呢，请稍等再说"继续"'
             isSessionEnd = false
             openMic = true
-            tips = '说“继续”我会为你提供后续答案，回答完毕时会自动退出本次对话'
+            tips = '说“继续”我会为你提供后续答案'
           } else {
             toSpeakText = sessionRes[reqBody.session.session_id]
-            isSessionEnd = true
+            isSessionEnd = false
             openMic = false
             delete sessionRes[reqBody.session.session_id]
-            tips = '回答完毕，自动退出本次对话'
+            tips = '回答完毕，请继续提问，或者说“退出”、“再见”'
           }
+        } else if (reqBody.query === '退出' || reqBody.query === '再见') {
+          toSpeakText = '再见'
+          isSessionEnd = true
+          openMic = false
+          tips = '回答完毕，请继续提问，或者说“退出”、“再见”'
         } else {
-          toSpeakText = '我还没学会这个技能呢'
+          toSpeakText = '哎呀，我还没学会这个技能呢，如果你想问我问题，请用为什么开头'
           isSessionEnd = true
           openMic = false
           tips = '回答完毕，自动退出本次对话'
@@ -78,15 +89,9 @@ export default defineEventHandler(async (e) => {
       break;
     case 'ExecuteCommand':
       toSpeakText = `已经为你${subHeading}`
+      understand = false
+      isSessionEnd = true
       content = toSpeakText;
-      // TODO 增加重试逻辑，上下文不一样了，可能需要传递部分数据到后续阶段的回话
-      // if (subHeading.includes('浏览器')) {
-      //   toSpeakText = `我还没学会帮你${subHeading}，请换个命令吧`
-      //   content = '失败三次就会退出本次回话'
-      //   isSessionEnd = false
-      //   openMic = true
-      //   understand = false
-      // }
       break;
     default:
       toSpeakText = '我没明白你的问题，请重新问我吧'
