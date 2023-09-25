@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "command": "npm run dev",
+      "command": "nr dev",
       "name": "server: nuxt",
       "request": "launch",
       "type": "node-terminal"

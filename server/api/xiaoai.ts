@@ -41,7 +41,7 @@ export default defineEventHandler(async (e) => {
       break;
     case 'AskQuestion':
       try {
-        toSpeakText = '小爱正在思考中，请稍等片刻';
+        toSpeakText = '小爱正在思考中，请稍等片刻再说“继续”获取答案';
         chatWithSpark(subHeading).then(res => {
           sessionRes[reqBody.session.session_id] = res
         });
@@ -50,7 +50,7 @@ export default defineEventHandler(async (e) => {
       }
       isSessionEnd = false
       openMic = true
-      tips = '说“继续”我会为你提供后续答案，回答完毕时会自动退出本次对话'
+      tips = '说“继续”我会为你提供后续答案'
       content = toSpeakText;
       subHeading = subHeading.replace(/^回答/, "");
       break;
@@ -73,12 +73,10 @@ export default defineEventHandler(async (e) => {
           toSpeakText = '再见'
           isSessionEnd = true
           openMic = false
-          tips = '回答完毕，请继续提问，或者说“退出”、“再见”'
         } else {
           toSpeakText = '哎呀，我还没学会这个技能呢，如果你想问我问题，请用为什么开头'
           isSessionEnd = true
           openMic = false
-          tips = '回答完毕，自动退出本次对话'
         }
       } catch (error) {
         console.error(error)
@@ -91,6 +89,11 @@ export default defineEventHandler(async (e) => {
       understand = false
       isSessionEnd = true
       content = toSpeakText;
+      break;
+    case "Mi_Exit":
+      toSpeakText = '再见'
+      isSessionEnd = true
+      openMic = false
       break;
     default:
       toSpeakText = '我没明白你的问题，请重新问我吧'
