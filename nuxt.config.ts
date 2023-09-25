@@ -20,6 +20,9 @@ export default defineNuxtConfig({
   //   'github:my-themes/awesome#v1' // Extend from a git repository
   // ],
   nitro: {
+    experimental: {
+      wasm: true
+    },
     // preset: 'vercel-edge',
     devStorage: {
       // redis: {
