@@ -33,14 +33,17 @@ export default defineEventHandler(async (e) => {
   // const stringified = fs.readFileSync(file, 'utf8');
   const query = getQuery(e)
   const { name } = query
-  if (goStatus === 'loaded') {
-    return {
-      test: globalThis.hello(name),
-    }
-  } else {
-    return {
-      goStatus,
-      error
-    }
+  let test = ''
+  let error2 = null
+  try {
+    test = globalThis.hello(name)
+  } catch (e) {
+    error2 = e
+  }
+  return {
+    goStatus,
+    error,
+    error2,
+    test,
   }
 })
