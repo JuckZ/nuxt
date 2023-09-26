@@ -24,7 +24,7 @@ export default defineEventHandler(async (e) => {
   let res = await loadNtfyTask(name)
   return {
     res,
-    dir: fs.readdirSync('./.output/public/'),
+    dir: fs.readdirSync('./'),
     // test: globalThis.hello('juck'),
     path: [__filename, __dirname, fs.readdirSync(__dirname)]
   }
