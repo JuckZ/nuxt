@@ -17,13 +17,9 @@ const loadNtfy = async () => {
 };
 
 loadNtfy()
-globalThis.greet = function(name: string) {
-  return 'halo ' + name
-}
 export default defineEventHandler(async (e) => {
   return {
-    // test: globalThis.hello('juck'),
-    test: globalThis.greet('juck'),
+    test: globalThis.hello('juck'),
     path: [__filename, __dirname, fs.readdirSync(__dirname)]
   }
 })
