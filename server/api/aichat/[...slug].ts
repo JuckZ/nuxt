@@ -11,7 +11,12 @@ router.get(
   defineEventHandler(async (e) => {
     const query = getQuery(e)
     const { keyword } = query
-    const res = await chatWithSpark(keyword as string)
+    let res = null
+    try {
+      res = await chatWithSpark(keyword as string)
+    } catch (error) {
+      res = error
+    }
     return {
       data: res
     }
