@@ -8,23 +8,19 @@ import wasmExec from './ntfy/wasm_exec.js';
 
 wasmExec()
 
-let error: any = null
-let goStatus = 'beforeload'
-new Promise(async (resolve, reject) => {
+let res: any = undefined
+let loadNtfyTask = () => new Promise(async (resolve, reject) => {
   try {
-    goStatus = 'loading'
     const go = new Go();
     // const ins = await WebAssembly.instantiate(fs.readFileSync(path.join(process.cwd(), 'public', 'ntfy.wasm')), go.importObject);
     const ins = await WebAssembly.instantiateStreaming(fetch("https://xiaoai.ihave.cool/ntfy.wasm"), go.importObject)
     const { instance } = ins;
-    goStatus = 'loaded'
     go.run(instance);
-    resolve(true)
-  } catch (e) {
-    console.error(e);
-    error = e
-    goStatus = 'error'
-    reject(e)
+    res = 'loaded'
+    resolve(res)
+  } catch (error) {
+    res = error
+    reject(error)
   }
 })
 
@@ -33,17 +29,9 @@ export default defineEventHandler(async (e) => {
   // const stringified = fs.readFileSync(file, 'utf8');
   const query = getQuery(e)
   const { name } = query
-  let test = ''
-  let error2 = null
-  try {
-    test = globalThis.hello(name)
-  } catch (e) {
-    error2 = e
-  }
+  await loadNtfyTask()
   return {
-    goStatus,
-    error,
-    error2,
-    test,
+    res,
+    test: globalThis.hello(name),
   }
 })
