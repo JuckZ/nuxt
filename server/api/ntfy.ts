@@ -9,7 +9,7 @@ let loadNtfyTask = (name: string) => {
     try {
       await import('./ntfy/wasm_exec.js');
       const go = new Go();
-      const ins = await WebAssembly.instantiate(fs.readFileSync('server/wasm/ntfy.wasm'), go.importObject);
+      const ins = await WebAssembly.instantiate(fs.readFileSync('./.output/public/ntfy.wasm'), go.importObject);
       const { instance } = ins;
       go.run(instance);
       resolve(globalThis.hello(name))
@@ -19,17 +19,12 @@ let loadNtfyTask = (name: string) => {
   })
 }
 
-let timeoutTask = new Promise((resolve, reject) => {
-  let t1 = setTimeout(() => {
-    resolve('timeout')
-    clearTimeout(t1)
-  }, 2000);
-})
 export default defineEventHandler(async (e) => {
   const { name = 'world' } = getQuery(e)
-  let res = await Promise.race([loadNtfyTask(name), timeoutTask])
+  let res = await loadNtfyTask(name)
   return {
     res,
+    dir: fs.readdirSync('./.output/public/'),
     // test: globalThis.hello('juck'),
     path: [__filename, __dirname, fs.readdirSync(__dirname)]
   }

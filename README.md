@@ -51,5 +51,5 @@ Check out the [deployment documentation](https://nuxt.com/docs/getting-started/d
 ```powershell
 $env:GOOS = "js"
 $env:GOARCH = "wasm"
-go build -o server/wasm/ntfy.wasm server/api/ntfy/ntfy.go
+go build -o public/ntfy.wasm server/api/ntfy/ntfy.go
 ```
