@@ -26,6 +26,7 @@ export default defineEventHandler(async (e) => {
   let res = await loadNtfyTask(name)
   return {
     res,
+    file: await fetch('https://xiaoai.ihave.cool/ntfy.wasm'),
     cwd: process.cwd(),
     dir: fs.readdirSync(pathval),
     dirname: __dirname,

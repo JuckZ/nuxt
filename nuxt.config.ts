@@ -33,8 +33,8 @@ export default defineNuxtConfig({
     experimental: {
       wasm: true
     },
-    preset: 'node-server',
-    // preset: 'vercel',
+    // preset: 'node-server',
+    preset: 'vercel',
     // preset: 'vercel-edge',
     devStorage: {
       // redis: {
