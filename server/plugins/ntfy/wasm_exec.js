@@ -4,7 +4,7 @@
 import crypto from 'crypto'
 "use strict";
 
-(() => {
+export default () => {
 	const enosys = () => {
 		const err = new Error("not implemented");
 		err.code = "ENOSYS";
@@ -554,4 +554,4 @@ import crypto from 'crypto'
 			};
 		}
 	}
-})();
+}
