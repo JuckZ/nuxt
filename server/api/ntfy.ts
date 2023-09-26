@@ -4,8 +4,8 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const file = path.join(process.cwd(), 'public', 'test.json');
-const stringified = fs.readFileSync(file, 'utf8');
+const file = path.join(process.cwd(), 'files', 'test.json');
+// const stringified = fs.readFileSync(file, 'utf8');
 
 let loadNtfyTask = (name: string) => {
   return new Promise(async (resolve, reject) => {
@@ -24,10 +24,11 @@ let loadNtfyTask = (name: string) => {
 
 export default defineEventHandler(async (e) => {
   const { name = 'world' } = getQuery(e)
-  let res = await loadNtfyTask(name)
+  // let res = await loadNtfyTask(name)
   return {
-    res,
-    stringified,
+    // res,
+    cwd: process.cwd(),
+    test: fs.readdirSync(process.cwd()),
     // test: globalThis.hello('juck'),
     path: [__filename, __dirname, fs.readdirSync(__dirname)]
   }
