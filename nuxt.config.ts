@@ -19,23 +19,10 @@ export default defineNuxtConfig({
   //   '@my-themes/awesome', // Extend from an installed npm package
   //   'github:my-themes/awesome#v1' // Extend from a git repository
   // ],
-  routeRules: {
-    // all routes (by default) will be revalidated every 60 seconds, in the background
-    '/**': { isr: 60 },
-    // this page will be generated on demand and then cached permanently
-    '/static': { isr: true },
-    // this page is generated at build time and cached permanently
-    '/prerendered': { prerender: true },
-    // this page will be always fresh
-    '/dynamic': { isr: false },
-  },
   nitro: {
     experimental: {
       wasm: true
     },
-    // vercel: {},
-    // preset: 'node-server',
-    // preset: 'vercel',
     // preset: 'vercel-edge',
     devStorage: {
       // redis: {
