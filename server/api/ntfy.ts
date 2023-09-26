@@ -9,7 +9,8 @@ let loadNtfyTask = (name: string) => {
     try {
       await import('./ntfy/wasm_exec.js');
       const go = new Go();
-      const ins = await WebAssembly.instantiate(fs.readFileSync(path.join(process.cwd(), 'public', 'ntfy.wasm')), go.importObject);
+      // const ins = await WebAssembly.instantiate(fs.readFileSync(path.join(process.cwd(), 'public', 'ntfy.wasm')), go.importObject);
+      const ins = WebAssembly.instantiateStreaming(fetch("https://xiaoai.ihave.cool/ntfy.wasm"), go.importObject)
       const { instance } = ins;
       go.run(instance);
       resolve(globalThis.hello(name))
@@ -27,11 +28,9 @@ export default defineEventHandler(async (e) => {
   return {
     res,
     file: await fetch('https://xiaoai.ihave.cool/ntfy.wasm'),
-    cwd: process.cwd(),
+    path: pathval,
     dir: fs.readdirSync(pathval),
     dirname: __dirname,
-    dirDir: fs.readdirSync(__dirname),
-    test: fs.readdirSync(process.cwd()),
     filename: __filename
     // test: globalThis.hello('juck'),
   }
