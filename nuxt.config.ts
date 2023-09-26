@@ -21,13 +21,13 @@ export default defineNuxtConfig({
   // ],
   routeRules: {
     // all routes (by default) will be revalidated every 60 seconds, in the background
-    '/**': { isr: 60 },
+    // '/**': { isr: 60 },
     // this page will be generated on demand and then cached permanently
-    '/static': { isr: true },
+    // '/static': { isr: true },
     // this page is generated at build time and cached permanently
-    '/prerendered': { prerender: true },
+    // '/prerendered': { prerender: true },
     // this page will be always fresh
-    '/dynamic': { isr: false },
+    // '/dynamic': { isr: false },
   },
   nitro: {
     experimental: {
