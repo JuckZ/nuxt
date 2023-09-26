@@ -49,8 +49,7 @@ Check out the [deployment documentation](https://nuxt.com/docs/getting-started/d
 ## Compile ntfy
 
 ```powershell
-cd server/util/ntfy
 $env:GOOS = "js"
 $env:GOARCH = "wasm"
-go build -o public/ntfy.wasm server/util/ntfy/ntfy.go
+go build -o server/wasm/ntfy.wasm server/api/ntfy/ntfy.go
 ```
