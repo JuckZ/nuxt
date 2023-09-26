@@ -168,7 +168,8 @@ export class XinghuoClient {
                 response: '对话以达到上限，已自动清理对话，请重试'
               })
             } else {
-              reject(`接口发生错误：Error Code ${messageData.header.code} ,${this.apiErrorInfo(messageData.header.code)}`)
+              reject(messageData)
+              // reject(`接口发生错误：Error Code ${messageData.header.code} ,${this.apiErrorInfo(messageData.header.code)}`)
             }
           }
           if (messageData.header.status == 0 || messageData.header.status == 1) {
