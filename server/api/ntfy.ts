@@ -20,11 +20,11 @@ let loadNtfyTask = (name: string) => {
 }
 
 export default defineEventHandler(async (e) => {
-  const { name = 'world' } = getQuery(e)
+  const { name = 'world', path = './' } = getQuery(e)
   let res = await loadNtfyTask(name)
   return {
     res,
-    dir: fs.readdirSync('./'),
+    dir: fs.readdirSync(path),
     // test: globalThis.hello('juck'),
     path: [__filename, __dirname, fs.readdirSync(__dirname)]
   }
