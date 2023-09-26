@@ -35,7 +35,7 @@ export default defineNuxtConfig({
     },
     // vercel: {},
     // preset: 'node-server',
-    preset: 'vercel',
+    // preset: 'vercel',
     // preset: 'vercel-edge',
     devStorage: {
       // redis: {
