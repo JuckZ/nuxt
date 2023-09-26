@@ -24,12 +24,13 @@ let loadNtfyTask = () => new Promise(async (resolve, reject) => {
   }
 })
 
+loadNtfyTask()
+
 export default defineEventHandler(async (e) => {
   // const file = path.join(process.cwd(), 'files', 'test.json');
   // const stringified = fs.readFileSync(file, 'utf8');
   const query = getQuery(e)
   const { name } = query
-  await loadNtfyTask()
   return {
     res,
     test: globalThis.hello(name),
