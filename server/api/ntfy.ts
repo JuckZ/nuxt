@@ -7,7 +7,7 @@ import wasmExec from './ntfy/wasm_exec.js';
 // const __dirname = path.dirname(__filename);
 
 wasmExec()
-
+let counter = 0
 let res: any = undefined
 let loadNtfyTask = () => new Promise(async (resolve, reject) => {
   try {
@@ -24,14 +24,18 @@ let loadNtfyTask = () => new Promise(async (resolve, reject) => {
   }
 })
 
-loadNtfyTask()
-
 export default defineEventHandler(async (e) => {
   // const file = path.join(process.cwd(), 'files', 'test.json');
   // const stringified = fs.readFileSync(file, 'utf8');
+  const res = await loadNtfyTask()
   const query = getQuery(e)
+  
   const { name } = query
+  counter++
   return {
+    url: e.node.req.url,
+    query: getQuery(e),
+    counter,
     res,
     test: globalThis.hello(name),
   }
