@@ -21,8 +21,8 @@ let loadNtfyTask = (name: string) => {
 
 export default defineEventHandler(async (e) => {
   const { name = 'world', pathval = './' } = getQuery(e)
-  const file = path.join(process.cwd(), 'files', 'test.json');
-  const stringified = fs.readFileSync(file, 'utf8');
+  // const file = path.join(process.cwd(), 'files', 'test.json');
+  // const stringified = fs.readFileSync(file, 'utf8');
   let res = await loadNtfyTask(name)
   return {
     res,
