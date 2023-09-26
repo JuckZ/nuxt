@@ -8,6 +8,7 @@ import wasmExec from './ntfy/wasm_exec.js';
 
 wasmExec()
 
+let error: any = null
 let goStatus = 'beforeload'
 let loadNtfyTask = new Promise(async (resolve, reject) => {
   try {
@@ -27,6 +28,7 @@ loadNtfyTask.then(res => {
   goStatus = 'loaded'
 }).catch(e => {
   console.error(e);
+  error = e
   goStatus = 'error'
 })
 
@@ -41,7 +43,8 @@ export default defineEventHandler(async (e) => {
     }
   } else {
     return {
-      goStatus
+      goStatus,
+      error
     }
   }
 })
