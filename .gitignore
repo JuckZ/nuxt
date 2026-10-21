@@ -96,5 +96,7 @@ sw.*
 
 # env
 .env.local
+.env.*
+!.env.example
 
 public/mixedConfig.yaml

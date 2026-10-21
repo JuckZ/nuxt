@@ -1,11 +1,10 @@
-import { doTranslate } from '../../../service'
-export default defineEventHandler(async (e) => {
-  // console.log(e.context.params)
-  // const body = await readBody(event)
-  const query = getQuery(e)
-  const { keyword } = query
-  const data = await doTranslate(keyword as string, '', '')
+import { translateToEnglish } from '#server/service'
+
+export default defineEventHandler(async (event) => {
+  const query = getQuery(event)
+  const keyword = typeof query.keyword === 'string' ? query.keyword : ''
+
   return {
-    data
+    data: await translateToEnglish(keyword),
   }
 })

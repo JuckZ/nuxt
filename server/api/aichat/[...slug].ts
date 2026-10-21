@@ -1,89 +1,52 @@
-import { createRouter, defineEventHandler, useBase } from 'h3'
-import { chatWithOpenAI, genImageWithChatGPT } from '@/server/service/openai'
-import { chatWithBing } from '@/server/service/bing'
-import { chatWithChatGPT } from '@/server/service/chatgpt'
-import { chatWithSpark } from '@/server/service/spark'
+import { generateChatText } from '#server/ai/gateway'
+import type { AiProfile } from '#server/ai/types'
 
-const router = createRouter()
+const legacyProfiles: Readonly<Record<string, AiProfile>> = {
+  'openai': 'chat-quality',
+  'chatgpt': 'chat-quality',
+  'spark': 'chat-fast',
+  'ernie-bot': 'chat-quality',
+}
 
-router.get(
-  '/Spark',
-  defineEventHandler(async (e) => {
-    const query = getQuery(e)
-    const { keyword } = query
-    let res = null
-    try {
-      res = await chatWithSpark(keyword as string)
-    } catch (error) {
-      res = error
-    }
-    return {
-      data: res
-    }
-    // return {
-    //   data: '暂未开放此调用方式'
-    // }
+export default defineEventHandler(async (event) => {
+  const providerName = getRouterParam(event, 'slug')?.split('/')[0]?.toLowerCase()
+  const query = getQuery(event)
+  const keyword = typeof query.keyword === 'string' ? query.keyword.trim() : ''
+
+  if (!providerName) {
+    throw createError({ statusCode: 404, statusMessage: 'AI provider was not specified' })
+  }
+
+  if (providerName === 'bing' || providerName === 'genimagewithchatgpt') {
+    throw createError({
+      statusCode: 410,
+      statusMessage: providerName === 'bing'
+        ? 'The unofficial Bing Chat connector has been retired'
+        : 'Image generation is not available through the unified chat endpoint',
+    })
+  }
+
+  const profile = legacyProfiles[providerName]
+
+  if (!profile) {
+    throw createError({ statusCode: 404, statusMessage: `Unknown AI provider: ${providerName}` })
+  }
+
+  if (!keyword) {
+    throw createError({ statusCode: 400, statusMessage: 'The keyword query parameter is required' })
+  }
+
+  setResponseHeaders(event, {
+    deprecation: 'true',
+    link: '</api/ai/chat>; rel="successor-version"',
   })
-)
 
-router.get(
-  '/ERNIE-Bot',
-  defineEventHandler(async (e) => {
-    const query = getQuery(e)
-    const { keyword } = query
-    const res = await chatWithSpark(keyword as string)
-    return {
-      data: res
-    }
+  const result = await generateChatText({
+    profile,
+    prompt: keyword,
+    messages: undefined,
+    tools: [],
   })
-)
 
-router.get(
-  '/OpenAI',
-  defineEventHandler(async (e) => {
-    const query = getQuery(e)
-    const { keyword } = query
-    const res = await chatWithOpenAI(keyword as string)
-    return {
-      data: res
-    }
-  })
-)
-
-router.get(
-  '/Bing',
-  defineEventHandler(async (e) => {
-    const query = getQuery(e)
-    const { keyword } = query
-    const res = await chatWithBing(keyword as string)
-    return {
-      data: res
-    }
-  })
-)
-
-router.get(
-  '/ChatGPT',
-  defineEventHandler(async (e) => {
-    const query = getQuery(e)
-    const { keyword } = query
-    const res = await chatWithChatGPT(keyword as string)
-    return {
-      data: res
-    }
-  })
-)
-
-router.get(
-  '/GenImageWithChatGPT',
-  defineEventHandler(async (e) => {
-    const query = getQuery(e)
-    const { keyword } = query
-    const res = await genImageWithChatGPT(keyword as string)
-    return {
-      data: res
-    }
-  })
-)
-
-export default useBase('/api/aichat', router.handler)
+  return { data: result.text }
+})

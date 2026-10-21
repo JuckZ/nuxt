@@ -1,36 +1,35 @@
-import yaml from 'js-yaml';
-import fs from 'node:fs';
-import * as crypto from 'crypto';
-import Base64 from 'base-64';
+import { createHmac } from 'node:crypto'
 
-// 加载YAML配置文件
-export function loadYamlConfig(filePath: string) {
-  let fileContent = fs.readFileSync(filePath, 'utf8');
-  return yaml.load(fileContent);
+interface XiaoAiSignatureInput {
+  method: string
+  urlPath: string
+  query?: string
+  date: string
+  host: string
+  contentType?: string
+  contentMd5?: string
 }
 
-// 合并两个配置
-export function mixin(baseConfig: object, mixinConfig: object) {
-  return { ...baseConfig, ...mixinConfig };
-}
+export function createXiaoAiAuthorization(input: XiaoAiSignatureInput) {
+  const { xiaoAiKeyId, xiaoAiSecret } = useRuntimeConfig()
 
-// 保存混合后的配置
-export function saveYamlConfig(filePath: string, config: object) {
-  let yamlConfig = yaml.dump(config);
-  fs.writeFileSync(filePath, yamlConfig, 'utf8');
-}
+  if (!xiaoAiKeyId || !xiaoAiSecret) {
+    throw createError({ statusCode: 503, statusMessage: 'XiaoAI is not configured' })
+  }
 
-export function xiaoAiEncrypt(method: string, urlPath: string, param: string, xiaomiDate: string, host: string, contentType: string, md5: string) {
-  const runtimeConfig = useRuntimeConfig()
-  const algorithmForMac = "sha256";
-  const source = `${method}\n${urlPath}\n${param}\n${xiaomiDate}\n${host}\n${contentType}\n${md5}\n`;
-  const decodedSecret = Base64.decode(runtimeConfig.xiaoAiSecret);
-  const hmac = crypto.createHmac(algorithmForMac, Buffer.from(decodedSecret, 'binary'));
-  hmac.update(source, "utf8");
-  const signature = hmac.digest('hex');
-  return {
-    source,
-    signature,
-    token: `MIAI-HmacSHA256-V1 ${runtimeConfig.xiaoAiKeyId}::${signature}`
-  };
+  const source = [
+    input.method.toUpperCase(),
+    input.urlPath,
+    input.query ?? '',
+    input.date,
+    input.host,
+    input.contentType ?? '',
+    input.contentMd5 ?? '',
+    '',
+  ].join('\n')
+  const signature = createHmac('sha256', Buffer.from(xiaoAiSecret, 'base64'))
+    .update(source, 'utf8')
+    .digest('hex')
+
+  return `MIAI-HmacSHA256-V1 ${xiaoAiKeyId}::${signature}`
 }

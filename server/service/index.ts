@@ -1,72 +1,106 @@
-import crypto from 'crypto'
-import { BaiduTranslate } from '../config/BaiduTranslate'
+import { createHash, randomBytes } from 'node:crypto'
 import { createClient } from 'pexels'
-import { colorSchema } from '../const/constants'
+import { colorSchema } from '#server/const/constants'
 
-const salt = 'random'
-const runtimeConfig = useRuntimeConfig()
-const baiduTranslateConfig = new BaiduTranslate(
-  runtimeConfig.baiduTranslateAppid,
-  runtimeConfig.baiduTranslateAppsecret
-)
+export type ImageOrigin = 'dummyimage' | 'pexels' | 'pixabay'
 
-function encrypt(str: string) {
-  const md5 = crypto.createHash('md5')
-  return md5.update(str).digest('hex')
-}
-export async function doTranslate(keyword: string, from: string, to: string) {
-  console.error(baiduTranslateConfig.getAppId())
-  const sign = encrypt(
-    baiduTranslateConfig.getAppId() + keyword + salt + baiduTranslateConfig.getAppSecret()
-  )
-  const url =
-    'https://fanyi-api.baidu.com/api/trans/vip/translate?q=' +
-    encodeURI(keyword) +
-    '&from=zh&to=en&appid=' +
-    baiduTranslateConfig.getAppId() +
-    '&salt=' +
-    salt +
-    '&sign=' +
-    sign
-  const data = (await $fetch(url)) as any
-  return data.trans_result[0].dst
+interface BaiduTranslateResponse {
+  trans_result?: Array<{ dst: string, src: string }>
+  error_code?: string
+  error_msg?: string
 }
 
-const pexelsClient = createClient(runtimeConfig.pexelsApikey)
+interface PixabayResponse {
+  hits?: Array<{ largeImageURL?: string }>
+}
 
-export async function doGenImage(origin: string, keyword: string) {
-  switch (origin) {
-    case 'pixabay':
-      const data: any = await new Promise((resolve, reject) => {
-        $fetch(
-          `https://pixabay.com/api/?key=${runtimeConfig.pixabayApikey}&q=${keyword}&image_type=photo&pretty=true&min_width=600&order=popular`
-        )
-          .then((res) => {
-            resolve(res)
-          })
-          .catch((error) => reject(error))
-      })
-      return data?.hits[0]?.largeImageURL || ''
-    case 'pexels':
-      const pexelsRes: any = await new Promise((resolve, reject) => {
-        pexelsClient.photos
-          .search({ query: keyword, size: 'large', per_page: 1 })
-          .then((photos: any) => {
-            resolve(photos)
-          })
-      })
-      return pexelsRes?.photos[0]?.src?.medium || ''
-    case 'dummyimage':
-      const color = colorSchema[Math.floor(Math.random() * colorSchema.length)]
-      return (
-        'https://dummyimage.com/700x400/' +
-        color.bg.replace('#', '') +
-        '/' +
-        color.fg.replace('#', '') +
-        '.png&text=' +
-        keyword
-      )
-    default:
-      break
+function md5(value: string) {
+  return createHash('md5').update(value).digest('hex')
+}
+
+export async function translateToEnglish(keyword: string) {
+  const value = keyword.trim()
+  const { baiduTranslateAppId, baiduTranslateAppSecret } = useRuntimeConfig()
+
+  if (!value) {
+    throw createError({ statusCode: 400, statusMessage: 'A translation keyword is required' })
   }
+
+  if (!baiduTranslateAppId || !baiduTranslateAppSecret) {
+    throw createError({ statusCode: 503, statusMessage: 'Baidu Translate is not configured' })
+  }
+
+  const salt = randomBytes(8).toString('hex')
+  const response = await $fetch<BaiduTranslateResponse>(
+    'https://fanyi-api.baidu.com/api/trans/vip/translate',
+    {
+      query: {
+        q: value,
+        from: 'zh',
+        to: 'en',
+        appid: baiduTranslateAppId,
+        salt,
+        sign: md5(`${baiduTranslateAppId}${value}${salt}${baiduTranslateAppSecret}`),
+      },
+    },
+  )
+  const translation = response.trans_result?.[0]?.dst
+
+  if (!translation) {
+    throw createError({
+      statusCode: 502,
+      statusMessage: response.error_msg ?? `Baidu Translate failed${response.error_code ? ` (${response.error_code})` : ''}`,
+    })
+  }
+
+  return translation
+}
+
+export async function generateImageUrl(origin: ImageOrigin, keyword: string) {
+  const config = useRuntimeConfig()
+
+  switch (origin) {
+    case 'pixabay': {
+      if (!config.pixabayApiKey) {
+        throw createError({ statusCode: 503, statusMessage: 'Pixabay is not configured' })
+      }
+
+      const response = await $fetch<PixabayResponse>('https://pixabay.com/api/', {
+        query: {
+          key: config.pixabayApiKey,
+          q: keyword,
+          image_type: 'photo',
+          min_width: 600,
+          order: 'popular',
+          per_page: 3,
+        },
+      })
+
+      return response.hits?.[0]?.largeImageURL ?? ''
+    }
+
+    case 'pexels': {
+      if (!config.pexelsApiKey) {
+        throw createError({ statusCode: 503, statusMessage: 'Pexels is not configured' })
+      }
+
+      const response = await createClient(config.pexelsApiKey).photos.search({
+        query: keyword,
+        size: 'large',
+        per_page: 1,
+      })
+
+      return 'photos' in response ? response.photos[0]?.src.medium ?? '' : ''
+    }
+
+    case 'dummyimage': {
+      const color = colorSchema[Math.floor(Math.random() * colorSchema.length)] ?? colorSchema[0]
+      const text = encodeURIComponent(keyword)
+      return `https://dummyimage.com/700x400/${color.bg.slice(1)}/${color.fg.slice(1)}.png&text=${text}`
+    }
+  }
+}
+
+export function isImageOrigin(value: string): value is ImageOrigin {
+  return value === 'dummyimage' || value === 'pexels' || value === 'pixabay'
 }

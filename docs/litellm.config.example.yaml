@@ -1,0 +1,30 @@
+model_list:
+  # Repeating a model_name creates a routed model group. LiteLLM can load-balance
+  # and fail over without exposing either upstream model to the Nuxt application.
+  - model_name: chat-fast
+    litellm_params:
+      model: os.environ/CHAT_FAST_PRIMARY_MODEL
+      api_key: os.environ/CHAT_FAST_PRIMARY_API_KEY
+  - model_name: chat-fast
+    litellm_params:
+      model: os.environ/CHAT_FAST_FALLBACK_MODEL
+      api_key: os.environ/CHAT_FAST_FALLBACK_API_KEY
+
+  - model_name: chat-quality
+    litellm_params:
+      model: os.environ/CHAT_QUALITY_MODEL
+      api_key: os.environ/CHAT_QUALITY_API_KEY
+
+  - model_name: reasoning
+    litellm_params:
+      model: os.environ/REASONING_MODEL
+      api_key: os.environ/REASONING_API_KEY
+
+router_settings:
+  num_retries: 2
+  retry_after: 1
+
+general_settings:
+  # Use a LiteLLM virtual key for the application in production. The master key
+  # is sufficient only for a local development gateway.
+  master_key: os.environ/LITELLM_MASTER_KEY

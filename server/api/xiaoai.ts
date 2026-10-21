@@ -1,137 +1,227 @@
-import { XiaoAiRequest, XiaoAiJsonResponse } from '@/server/entity/XiaoAiRequest';
-import { xiaoAiEncrypt } from '@/server/util';
-// import { defaultResponse, verifyToken } from '@/server/service/xiaoai';
-// import { chatWithChatGPT } from '@/server/service/chatgpt'
-// import { chatWithEnBot } from '@/server/service/wenxinqianfan'
-import { chatWithSpark } from '@/server/service/spark'
-import * as crypto from 'crypto';
+import { createHash } from 'node:crypto'
+import type {
+  XiaoAiIntentSlots,
+  XiaoAiJsonResponse,
+  XiaoAiRequest,
+} from '#server/entity/XiaoAiRequest'
+import { generateChatText } from '#server/ai/gateway'
+import { createXiaoAiAuthorization } from '#server/util'
 
-const runtimeConfig = useRuntimeConfig()
-const serverHost = useRuntimeConfig().serverHost
-const sessionRes: Record<string, string> = {}
-export default defineEventHandler(async (e) => {
-  const method = e.node.req.method!.toUpperCase();
-  // const token = e.node.req.headers['Authorization'] || e.node.req.headers['authorization'];
-  // if (!await verifyToken(e)) {
-  //   return
-  // }
-  const reqBody: XiaoAiRequest = await readBody(e);
-  const intent = reqBody.request.intent
-  const intentSlots: {
-    intent_name: string;
-    slots: {
-      name: string;
-      value: string;
-      raw_value: string;
-    }[]
-  } = JSON.parse(intent.slots)
-  let toSpeakText = ''
-  let subHeading = intent.query
-  let content = ''
-  let isSessionEnd = true
-  let openMic = false
-  let understand = true
-  let tips = ''
-  switch (intentSlots.intent_name) {
-    case 'Mi_Welcome':
-      toSpeakText = '你好，我是一只猪，你可以对我说，“为什么天是蓝色的？”或者告诉我“打开百度网页”'
-      isSessionEnd = false
-      openMic = true
-      tips = '你可以开始说出你的命令了'
-      break;
-    case 'AskQuestion':
-      try {
-        toSpeakText = '小爱正在思考中，请稍等片刻再说“继续”获取答案';
-        chatWithSpark(subHeading).then(res => {
-          sessionRes[reqBody.session.session_id] = res
-          console.log(res);
-        });
-      } catch (error) {
-        console.error(error)
-      }
-      isSessionEnd = false
-      openMic = true
-      tips = '说“继续”我会为你提供后续答案'
-      content = toSpeakText;
-      subHeading = subHeading.replace(/^回答/, "");
-      break;
-    case 'Mi_Default':
-      try {
-        if (reqBody.query === '继续') {
-          if (!sessionRes[reqBody.session.session_id]) {
-            toSpeakText = '还在思考呢，请稍等再说"继续"'
-            isSessionEnd = false
-            openMic = true
-            tips = '说“继续”我会为你提供后续答案'
-          } else {
-            toSpeakText = sessionRes[reqBody.session.session_id]
-            isSessionEnd = false
-            openMic = false
-            delete sessionRes[reqBody.session.session_id]
-            tips = '回答完毕，请继续提问，或者说“退出”、“再见”'
-          }
-        } else if (reqBody.query === '退出' || reqBody.query === '再见') {
-          toSpeakText = '再见'
-          isSessionEnd = true
-          openMic = false
-        } else {
-          toSpeakText = '哎呀，我还没学会这个技能呢，如果你想问我问题，请用为什么开头'
-          isSessionEnd = true
-          openMic = false
-        }
-      } catch (error) {
-        console.error(error)
-      }
-      content = toSpeakText;
-      subHeading = subHeading.replace(/^回答/, "");
-      break;
-    case 'ExecuteCommand':
-      toSpeakText = `已经为你${subHeading}`
-      understand = false
-      isSessionEnd = true
-      content = toSpeakText;
-      break;
-    case "Mi_Exit":
-      toSpeakText = '再见'
-      isSessionEnd = true
-      openMic = false
-      break;
-    default:
-      toSpeakText = '我没明白你的问题，请重新问我吧'
-      content = '失败三次就会退出本次回话'
-      isSessionEnd = false
-      openMic = true
-      understand = false
-      break;
+type SessionResult =
+  | { status: 'pending' }
+  | { status: 'complete', text: string }
+  | { status: 'failed', message: string }
+
+const sessionResults = new Map<string, SessionResult>()
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+function parseRequest(value: unknown): XiaoAiRequest {
+  if (!isRecord(value) || !isRecord(value.session) || !isRecord(value.request)) {
+    throw createError({ statusCode: 400, statusMessage: 'Invalid XiaoAI request' })
   }
-  const originalUrl = '/api/xiaoai'
-  const xiaoaiDate = (new Date()).toUTCString();
-  const res = {
-    "version": "1.0",
-    "is_session_end": isSessionEnd,
-    "response": {
-      "to_speak": {
-        "text": toSpeakText,
-        "type": 0
-      },
-      "to_display": {
-        "ui_type": 'phone',
-        "phone_template": {
-          "template_name": 'default_card',
-          "params": {
-            "box0_subheading": subHeading,
-            "box0_assistText": content,
-            "box0_tips": tips
-          }
-        }
-      },
-      "open_mic": openMic,
-      "not_understand": !understand,
+
+  const intent = value.request.intent
+  const sessionId = value.session.session_id
+
+  if (!isRecord(intent) || typeof intent.query !== 'string' || typeof intent.slots !== 'string' || typeof sessionId !== 'string') {
+    throw createError({ statusCode: 400, statusMessage: 'Invalid XiaoAI request' })
+  }
+
+  return value as unknown as XiaoAiRequest
+}
+
+function parseIntentSlots(source: string): XiaoAiIntentSlots {
+  try {
+    const value: unknown = JSON.parse(source)
+
+    if (isRecord(value) && typeof value.intent_name === 'string') {
+      return value as unknown as XiaoAiIntentSlots
     }
   }
-  const md5 = crypto.createHash('md5').update(JSON.stringify(res), 'utf-8').digest('hex');
-  const params = ''
-  const encryptRes = xiaoAiEncrypt(method, originalUrl!, params, xiaoaiDate, serverHost, "application/json", md5);
-  e.node.res.setHeader('Authorization', `MIAI-HmacSHA256-V1 ${runtimeConfig.xiaoAiKeyId}::${encryptRes.signature}`)
-  return res
+  catch {
+    // The error below provides a stable API response.
+  }
+
+  throw createError({ statusCode: 400, statusMessage: 'Invalid XiaoAI intent slots' })
+}
+
+function makeResponse(options: {
+  text: string
+  subheading: string
+  content?: string
+  tips?: string
+  sessionEnd?: boolean
+  openMic?: boolean
+  understood?: boolean
+}): XiaoAiJsonResponse {
+  return {
+    version: '1.0',
+    is_session_end: options.sessionEnd ?? true,
+    response: {
+      to_speak: {
+        text: options.text,
+        type: 0,
+      },
+      to_display: {
+        ui_type: 'phone',
+        phone_template: {
+          template_name: 'default_card',
+          params: {
+            box0_subheading: options.subheading,
+            box0_assistText: options.content ?? '',
+            box0_tips: options.tips ?? '',
+          },
+        },
+      },
+      open_mic: options.openMic ?? false,
+      not_understand: !(options.understood ?? true),
+    },
+  }
+}
+
+function beginQuestion(sessionId: string, question: string) {
+  sessionResults.set(sessionId, { status: 'pending' })
+
+  void generateChatText({
+    profile: 'chat-fast',
+    prompt: question,
+    messages: undefined,
+    tools: [],
+  })
+    .then((result) => {
+      sessionResults.set(sessionId, { status: 'complete', text: result.text })
+    })
+    .catch((error: unknown) => {
+      sessionResults.set(sessionId, {
+        status: 'failed',
+        message: error instanceof Error ? error.message : '回答生成失败',
+      })
+    })
+}
+
+function continueQuestion(sessionId: string, query: string) {
+  if (query === '退出' || query === '再见') {
+    sessionResults.delete(sessionId)
+    return makeResponse({ text: '再见', subheading: query })
+  }
+
+  if (query !== '继续') {
+    return makeResponse({
+      text: '我还没学会这个技能，如果想问问题，请以“为什么”开头。',
+      subheading: query,
+      understood: false,
+    })
+  }
+
+  const result = sessionResults.get(sessionId)
+
+  if (!result || result.status === 'pending') {
+    return makeResponse({
+      text: '还在思考，请稍等后再说“继续”。',
+      subheading: query,
+      tips: '说“继续”获取答案',
+      sessionEnd: false,
+      openMic: true,
+    })
+  }
+
+  sessionResults.delete(sessionId)
+
+  if (result.status === 'failed') {
+    return makeResponse({
+      text: `抱歉，${result.message}`,
+      subheading: query,
+      understood: false,
+    })
+  }
+
+  return makeResponse({
+    text: result.text,
+    subheading: query,
+    tips: '回答完毕，请继续提问，或者说“退出”',
+    sessionEnd: false,
+  })
+}
+
+export default defineEventHandler(async (event) => {
+  const request = parseRequest(await readBody(event))
+  const intent = parseIntentSlots(request.request.intent.slots)
+  const sessionId = request.session.session_id
+  const query = request.query || request.request.intent.query
+  let response: XiaoAiJsonResponse
+
+  switch (intent.intent_name) {
+    case 'Mi_Welcome':
+      response = makeResponse({
+        text: '你好，我是你的 AI 助手。你可以问我“为什么天是蓝色的？”',
+        subheading: query,
+        tips: '请说出你的问题',
+        sessionEnd: false,
+        openMic: true,
+      })
+      break
+
+    case 'AskQuestion':
+      beginQuestion(sessionId, request.request.intent.query)
+      response = makeResponse({
+        text: '正在思考，请稍后再说“继续”获取答案。',
+        subheading: request.request.intent.query.replace(/^回答/, ''),
+        content: '问题已经提交',
+        tips: '说“继续”获取答案',
+        sessionEnd: false,
+        openMic: true,
+      })
+      break
+
+    case 'Mi_Default':
+      response = continueQuestion(sessionId, query)
+      break
+
+    case 'ExecuteCommand':
+      response = makeResponse({
+        text: `已经为你${request.request.intent.query}`,
+        subheading: request.request.intent.query,
+        understood: false,
+      })
+      break
+
+    case 'Mi_Exit':
+      sessionResults.delete(sessionId)
+      response = makeResponse({ text: '再见', subheading: query })
+      break
+
+    default:
+      response = makeResponse({
+        text: '我没明白你的问题，请重新问我。',
+        subheading: query,
+        content: '连续失败可能会结束本次会话',
+        sessionEnd: false,
+        openMic: true,
+        understood: false,
+      })
+  }
+
+  const date = new Date().toUTCString()
+  const config = useRuntimeConfig(event)
+  const host = config.serverHost || getHeader(event, 'host') || 'localhost'
+  const contentMd5 = createHash('md5').update(JSON.stringify(response), 'utf8').digest('hex')
+  const authorization = createXiaoAiAuthorization({
+    method: event.method,
+    urlPath: '/api/xiaoai',
+    date,
+    host,
+    contentType: 'application/json',
+    contentMd5,
+  })
+
+  setResponseHeaders(event, {
+    authorization,
+    'content-md5': contentMd5,
+    'x-xiaomi-date': date,
+  })
+
+  return response
 })
