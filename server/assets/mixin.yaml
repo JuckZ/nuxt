@@ -1,7 +1,7 @@
 ##### 使用说明 #####
-# 1. 请填写 proxy-providers - subscribe - url 为订阅链接
-# 2. 下载 https://github.com/Loyalsoldier/clash-rules/archive/refs/heads/release.zip 并解压至 ./profiles/ruleset 文件夹下
-# 3. 若需要自动更新 ruleset, 请编辑 rule-providers 下各项 type 为 http
+# 1. 多订阅地址和独立节点填写在项目根目录私有文件 clash.config.yaml 中
+# 2. 本文件只维护公共规则与覆盖项，请勿在这里提交订阅密钥或节点密码
+# 3. rule-providers 使用 http 类型，由客户端按 interval 自动更新
 
 ##### 参考链接 #####
 # 1. clash 样例配置文件

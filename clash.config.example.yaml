@@ -1,0 +1,36 @@
+# Copy to clash.config.yaml. The real file is private and ignored by Git.
+# Default: GET /api/c
+# Private: GET /api/c?k=<NUXT_CLASH_SUB_KEY>
+# Legacy /api/clash and keyword remain supported.
+# Only the selected profile is included; private does not inherit default.
+# Subscription URLs must return Clash/Mihomo YAML containing proxies.
+
+default:
+  subscriptions: []
+  proxies: []
+
+private:
+  # Replace these example URLs and credentials before using this profile.
+  # Use subscriptions: [] or proxies: [] to disable a category.
+  subscriptions:
+    - name: 订阅A
+      url: "https://provider-a.example.com/subscribe?token=replace-me"
+      timeoutMs: 10000
+    - name: 订阅B
+      url: "https://provider-b.example.com/subscribe?token=replace-me"
+
+  proxies:
+    - name: 美国自建SS
+      type: ss
+      server: "your-server.example.com"
+      port: 443
+      cipher: aes-128-gcm
+      password: "replace-me"
+      udp: true
+    - name: 自建Trojan
+      type: trojan
+      server: "your-server.example.com"
+      port: 443
+      password: "replace-me"
+      sni: "your-server.example.com"
+      udp: true

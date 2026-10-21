@@ -31,6 +31,7 @@ export default defineNuxtConfig({
     freeClashSubUrl: '',
     clashSubUrl: '',
     clashSubKey: '',
+    clashSourcesFile: './clash.config.yaml',
 
     xiaoAiKeyId: '',
     xiaoAiSecret: '',

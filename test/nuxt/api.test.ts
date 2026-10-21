@@ -1,8 +1,14 @@
+import { randomUUID } from 'node:crypto'
+import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
 import type { AddressInfo } from 'node:net'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { $fetch, fetch, setup } from '@nuxt/test-utils/e2e'
-import { afterAll, describe, expect, test } from 'vitest'
+import * as yaml from 'js-yaml'
+import { afterAll, beforeEach, describe, expect, test } from 'vitest'
+import type { ClashDocument } from '../../server/clash/config'
 
 interface GatewayRequest {
   model?: string
@@ -13,6 +19,12 @@ interface GatewayRequest {
 }
 
 const gatewayRequests: GatewayRequest[] = []
+const fixtureCredentials = {
+  upstreamPublic: randomUUID(),
+  upstreamPrivate: randomUUID(),
+  standalonePublic: randomUUID(),
+  standalonePrivate: randomUUID(),
+}
 
 async function readJsonBody(request: IncomingMessage) {
   const chunks: Buffer[] = []
@@ -30,6 +42,45 @@ function sendJson(response: ServerResponse, value: unknown) {
 }
 
 const mockGateway = createServer(async (request, response) => {
+  if (request.method === 'GET' && request.url?.startsWith('/clash/')) {
+    if (request.url.startsWith('/clash/fail')) {
+      response.writeHead(503).end('Upstream unavailable')
+      return
+    }
+
+    if (request.url.startsWith('/clash/malformed')) {
+      response.writeHead(200).end('password: [secret-upstream-token')
+      return
+    }
+
+    if (request.url === '/clash/slow') {
+      setTimeout(() => response.writeHead(200).end('proxies: []'), 250)
+      return
+    }
+
+    const isPrivate = request.url === '/clash/private'
+    const source = request.url === '/clash/b' ? 'b' : 'a'
+    const proxy = {
+      name: isPrivate ? '私有节点' : '美国 01',
+      type: 'ss',
+      server: `${source}.example.com`,
+      port: 443,
+      cipher: 'aes-128-gcm',
+      password: isPrivate ? fixtureCredentials.upstreamPrivate : fixtureCredentials.upstreamPublic,
+    }
+    response.writeHead(200, {
+      'content-type': 'text/yaml',
+      'subscription-userinfo': 'upload=1; download=2; total=100; expire=2000000000',
+    })
+    response.end(yaml.dump({
+      'proxies': [proxy, ...(request.url === '/clash/a'
+        ? [{ ...proxy, name: '日本 01', 'dialer-proxy': '美国 01' }]
+        : [])],
+      'proxy-groups': [{ name: '上游选择', type: 'select', proxies: [proxy.name] }],
+    }))
+    return
+  }
+
   if (request.method !== 'POST' || request.url !== '/v1/chat/completions') {
     response.writeHead(404).end()
     return
@@ -81,19 +132,61 @@ await new Promise<void>((resolve) => {
 })
 
 const mockGatewayAddress = mockGateway.address() as AddressInfo
+const clashTemporaryDirectory = await mkdtemp(join(tmpdir(), 'nuxt-clash-test-'))
+const clashSourcesFile = join(clashTemporaryDirectory, 'clash.config.yaml')
+const clashSourceUrl = (path: string) => `http://127.0.0.1:${mockGatewayAddress.port}/clash/${path}`
+const manualNode = {
+  name: '独立节点',
+  type: 'trojan',
+  server: 'manual.example.com',
+  port: 443,
+  password: fixtureCredentials.standalonePublic,
+}
+
+const clashFixture = () => ({
+  default: {
+    subscriptions: [
+      { name: 'A', url: clashSourceUrl('a') },
+      { name: 'B', url: clashSourceUrl('b') },
+    ],
+    proxies: [manualNode],
+  },
+  private: {
+    subscriptions: [{ name: '私有源', url: clashSourceUrl('private') }],
+    proxies: [{ ...manualNode, name: '私有自建', password: fixtureCredentials.standalonePrivate }],
+  },
+})
+
+async function writeClashFixture(config: unknown = clashFixture()) {
+  await writeFile(clashSourcesFile, yaml.dump(config), 'utf8')
+}
+
+await writeClashFixture()
+
+const testRuntimeConfig = {
+  aiGatewayBaseUrl: `http://127.0.0.1:${mockGatewayAddress.port}/v1`,
+  aiGatewayApiKey: 'test-gateway-key',
+  aiModelChatFast: 'test-fast-group',
+  aiModelChatQuality: 'test-quality-group',
+  aiModelReasoning: 'test-reasoning-group',
+  clashSourcesFile,
+  clashSubKey: 'test-private-key',
+  freeClashSubUrl: clashSourceUrl('a'),
+  clashSubUrl: clashSourceUrl('private'),
+}
 
 describe('server API', async () => {
   await setup({
     rootDir: fileURLToPath(new URL('../..', import.meta.url)),
     browser: false,
+    // Nuxt loads the local .env while building. Explicit server overrides keep
+    // real credentials and subscription URLs out of the test requests.
+    env: Object.fromEntries(Object.entries(testRuntimeConfig).map(([key, value]) => [
+      `NUXT_${key.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}`,
+      value,
+    ])),
     nuxtConfig: {
-      runtimeConfig: {
-        aiGatewayBaseUrl: `http://127.0.0.1:${mockGatewayAddress.port}/v1`,
-        aiGatewayApiKey: 'test-gateway-key',
-        aiModelChatFast: 'test-fast-group',
-        aiModelChatQuality: 'test-quality-group',
-        aiModelReasoning: 'test-reasoning-group',
-      },
+      runtimeConfig: testRuntimeConfig,
     },
   })
 
@@ -101,6 +194,7 @@ describe('server API', async () => {
     await new Promise<void>((resolve, reject) => {
       mockGateway.close(error => error ? reject(error) : resolve())
     })
+    await rm(clashTemporaryDirectory, { recursive: true, force: true })
   })
 
   test('renders the Nuxt 4 app directory', async () => {
@@ -227,5 +321,149 @@ describe('server API', async () => {
 
     expect(response.status).toBe(400)
     expect(gatewayRequests).toHaveLength(before)
+  })
+
+  describe('Clash aggregated subscription', () => {
+    beforeEach(async () => {
+      await writeClashFixture()
+    })
+
+    test('merges multiple subscriptions and standalone nodes into a usable YAML export', async () => {
+      const response = await fetch('/api/clash')
+      const text = await response.text()
+      const config = yaml.load(text) as ClashDocument
+
+      expect(response.status).toBe(200)
+      expect(response.headers.get('content-type')).toContain('text/yaml')
+      expect(response.headers.get('cache-control')).toContain('no-store')
+      expect(response.headers.get('x-clash-source-count')).toBe('2')
+      expect(response.headers.get('x-clash-failed-source-count')).toBe('0')
+      expect(response.headers.get('subscription-userinfo')).toBeNull()
+      expect(config.proxies?.map(proxy => proxy.name)).toEqual([
+        '独立节点', '[A] 美国 01', '[A] 日本 01', '[B] 美国 01',
+      ])
+      expect(config.proxies?.find(proxy => proxy.name === '[A] 日本 01')?.['dialer-proxy']).toBe('[A] 美国 01')
+      expect(config['proxy-groups']?.map(group => group.name)).toEqual([
+        '🔰 AllProxy', '🤖 USProxy', '📦 A', '📦 B', '🛠 独立节点',
+      ])
+      expect(config.rules).toContain('MATCH,🔰 AllProxy')
+      expect(text).not.toContain(fixtureCredentials.upstreamPrivate)
+      expect(text).not.toContain(clashSourceUrl('a'))
+      const shortResponse = await fetch('/api/c')
+      expect(shortResponse.status).toBe(200)
+      expect(shortResponse.redirected).toBe(false)
+      expect(await shortResponse.text()).toBe(text)
+    })
+
+    test.each([
+      '/api/c?k=',
+      '/api/c?keyword=',
+      '/api/clash?k=',
+      '/api/clash?keyword=',
+    ])('keeps private nodes isolated behind the configured key at %s', async (path) => {
+      const response = await fetch(`${path}test-private-key`)
+      const config = yaml.load(await response.text()) as ClashDocument
+
+      expect(response.status).toBe(200)
+      expect(config.proxies?.map(proxy => proxy.name)).toEqual(['私有自建', '[私有源] 私有节点'])
+      const invalidKey = await fetch(`${path}wrong-key`)
+      const text = await invalidKey.text()
+      expect(invalidKey.status).toBe(200)
+      expect(text).not.toContain(fixtureCredentials.upstreamPrivate)
+      expect(text).not.toContain(fixtureCredentials.standalonePrivate)
+    })
+
+    test('uses k when both key parameters are supplied', async () => {
+      const response = await fetch('/api/c?k=wrong-key&keyword=test-private-key')
+      const text = await response.text()
+
+      expect(response.status).toBe(200)
+      expect(text).not.toContain(fixtureCredentials.upstreamPrivate)
+      const privateResponse = await fetch('/api/c?k=test-private-key&keyword=wrong-key')
+      const config = yaml.load(await privateResponse.text()) as ClashDocument
+      expect(config.proxies?.map(proxy => proxy.name)).toEqual(['私有自建', '[私有源] 私有节点'])
+    })
+
+    test('rejects ambiguous repeated keys', async () => {
+      const response = await fetch('/api/c?k=wrong-key&k=test-private-key')
+      expect(response.status).toBe(400)
+    })
+
+    test('continues with healthy sources when another source fails', async () => {
+      const fixture = clashFixture()
+      fixture.default.subscriptions[1]!.url = clashSourceUrl('fail?token=secret-upstream-token')
+      await writeClashFixture(fixture)
+
+      const response = await fetch('/api/clash')
+      const text = await response.text()
+      const config = yaml.load(text) as ClashDocument
+
+      expect(response.status).toBe(200)
+      expect(response.headers.get('x-clash-failed-source-count')).toBe('1')
+      expect(config.proxies).toHaveLength(3)
+      expect(text).not.toContain('secret-upstream-token')
+    })
+
+    test('supports standalone nodes without any upstream subscription', async () => {
+      await writeClashFixture({ default: { proxies: [manualNode] } })
+      const response = await fetch('/api/clash')
+      const config = yaml.load(await response.text()) as ClashDocument
+
+      expect(response.status).toBe(200)
+      expect(response.headers.get('x-clash-source-count')).toBe('0')
+      expect(config.proxies).toEqual([manualNode])
+      expect(config['proxy-groups']?.find(group => group.name === '🤖 USProxy')?.proxies).toEqual(['🔰 AllProxy'])
+    })
+
+    test('returns a sanitized error when every source fails', async () => {
+      await writeClashFixture({
+        default: {
+          subscriptions: [{ name: 'broken', url: clashSourceUrl('malformed?token=secret-upstream-token') }],
+        },
+      })
+      const response = await fetch('/api/clash')
+      const text = await response.text()
+
+      expect(response.status).toBe(502)
+      expect(text).not.toContain('secret-upstream-token')
+      expect(text).not.toContain(clashSourceUrl('malformed'))
+    })
+
+    test('bounds slow requests and retains standalone nodes', async () => {
+      await writeClashFixture({
+        default: {
+          subscriptions: [{ name: 'slow', url: clashSourceUrl('slow'), timeoutMs: 100 }],
+          proxies: [manualNode],
+        },
+      })
+      const response = await fetch('/api/clash')
+      expect(response.status).toBe(200)
+      expect(response.headers.get('x-clash-failed-source-count')).toBe('1')
+      const config = yaml.load(await response.text()) as ClashDocument
+      expect(config.proxies).toEqual([manualNode])
+    })
+
+    test('retains legacy environment subscription routing when no profile sources are set', async () => {
+      await writeClashFixture({ default: {}, private: {} })
+      const response = await fetch('/api/clash')
+      const config = yaml.load(await response.text()) as ClashDocument
+
+      expect(response.status).toBe(200)
+      expect(response.headers.get('subscription-userinfo')).toContain('total=100')
+      expect(config.proxies?.map(proxy => proxy.name)).toEqual(['美国 01', '日本 01'])
+      expect(config['proxy-groups']?.map(group => group.name)).toContain('上游选择')
+      const privateResponse = await fetch('/api/clash?keyword=test-private-key')
+      const privateConfig = yaml.load(await privateResponse.text()) as ClashDocument
+      expect(privateConfig.proxies?.[0]?.name).toBe('私有节点')
+    })
+
+    test('rejects malformed local configuration without leaking node credentials', async () => {
+      await writeFile(clashSourcesFile, 'password: [local-secret-token', 'utf8')
+      const response = await fetch('/api/clash')
+      const text = await response.text()
+
+      expect(response.status).toBe(500)
+      expect(text).not.toContain('local-secret-token')
+    })
   })
 })

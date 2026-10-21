@@ -100,3 +100,7 @@ sw.*
 !.env.example
 
 public/mixedConfig.yaml
+
+# Private subscription URLs and standalone proxy credentials
+clash.config.yaml
+clash.config.local.yaml
