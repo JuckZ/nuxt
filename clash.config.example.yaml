@@ -1,4 +1,5 @@
 # Copy to clash.config.yaml. The real file is private and ignored by Git.
+# On Vercel, paste this YAML into the private NUXT_CLASH_SOURCES_YAML variable.
 # Default: GET /api/c
 # Private: GET /api/c?k=<NUXT_CLASH_SUB_KEY>
 # Legacy /api/clash and keyword remain supported.

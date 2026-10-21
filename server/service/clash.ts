@@ -27,6 +27,18 @@ async function readMixin(): Promise<ClashDocument> {
   }
 }
 
+function parsePrivateSources(source: string) {
+  try {
+    return parseSourcesConfig(source)
+  }
+  catch (error) {
+    throw createError({
+      statusCode: 500,
+      statusMessage: error instanceof ClashConfigError ? error.message : 'Invalid Clash sources configuration',
+    })
+  }
+}
+
 async function readSourcesFile(file: string) {
   if (!file.trim()) {
     return undefined
@@ -45,15 +57,7 @@ async function readSourcesFile(file: string) {
     throw createError({ statusCode: 503, statusMessage: 'Unable to read the private Clash sources file' })
   }
 
-  try {
-    return parseSourcesConfig(source)
-  }
-  catch (error) {
-    throw createError({
-      statusCode: 500,
-      statusMessage: error instanceof ClashConfigError ? error.message : 'Invalid Clash sources configuration',
-    })
-  }
+  return parsePrivateSources(source)
 }
 
 async function downloadSubscription(source: ClashSubscriptionSource) {
@@ -175,7 +179,15 @@ async function getLegacySubscription(url: string, mixin: ClashDocument) {
 
 export async function getClashSubscription(key: string) {
   const config = useRuntimeConfig()
-  const sources = await readSourcesFile(config.clashSourcesFile)
+  const sourceYaml: unknown = config.clashSourcesYaml
+
+  if (typeof sourceYaml !== 'string') {
+    throw createError({ statusCode: 500, statusMessage: 'NUXT_CLASH_SOURCES_YAML must contain YAML text' })
+  }
+
+  const sources = sourceYaml.trim()
+    ? parsePrivateSources(sourceYaml)
+    : await readSourcesFile(config.clashSourcesFile)
   const isPrivate = Boolean(config.clashSubKey && key === config.clashSubKey)
   const profile = isPrivate ? sources?.private : sources?.default
   const mixin = await readMixin()

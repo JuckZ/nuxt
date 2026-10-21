@@ -146,6 +146,17 @@ NUXT_CLASH_SOURCES_FILE=./clash.config.yaml
 NUXT_CLASH_SUB_KEY=your-private-access-key
 ```
 
+For Vercel, use private environment variables instead of a local file. In the project's **Settings → Environment Variables**, add both variables to **Production** (and Preview if needed):
+
+| Variable | Value |
+| --- | --- |
+| `NUXT_CLASH_SOURCES_YAML` | Paste the complete contents of your real `clash.config.yaml`, including the `default` / `private` profile structure |
+| `NUXT_CLASH_SUB_KEY` | Your private subscription access key |
+
+Paste the actual multiline YAML text into the Value field, without an outer pair of quotes or literal `\n` escapes. Keep the real YAML and key out of Git and `vercel.json`. Save the variables and redeploy; they apply to the new deployment. `NUXT_CLASH_SOURCES_FILE` is not needed on Vercel when inline YAML is set.
+
+A non-empty `NUXT_CLASH_SOURCES_YAML` completely replaces the local sources file; profiles are not combined across the two inputs. The inline YAML uses the same schema and profile isolation as the file. Invalid inline YAML returns a sanitized HTTP 500 error and does not silently fall back to the file. An empty or whitespace-only variable leaves file-based configuration enabled. If the selected profile has no configured sources or nodes, the existing legacy subscription URL fallback still applies. The variable stays in private runtime configuration and is never exposed through Nuxt's public config.
+
 Then import the following address into a Clash/Mihomo client, or open it in a browser to inspect the YAML:
 
 - `http://localhost:3000/api/c` exports only `default`.
@@ -154,7 +165,7 @@ Then import the following address into a Clash/Mihomo client, or open it in a br
 
 The legacy `/api/clash` path and `keyword` parameter remain supported, including `/api/clash?k=...` and `/api/c?keyword=...`. Both paths execute the same handler without a redirect. If both parameters are supplied, `k` takes precedence. Repeated key parameters are rejected with HTTP 400.
 
-The YAML file is read on each request, so edits take effect on the next refresh. Restart the development server after changing `.env`. For another device on the LAN, replace `localhost` with this server's LAN address. For deployment, provision the private file separately and set an absolute path when the working directory differs. The file is not bundled into the production build; runtimes must support reading the provisioned file.
+The YAML file is read on each request when no inline YAML is set, so file edits take effect on the next refresh. Restart the development server after changing `.env`. For another device on the LAN, replace `localhost` with this server's LAN address. For file-based deployment, provision the private file separately and set an absolute path when the working directory differs. The file is not bundled into the production build; runtimes must support reading the provisioned file. Use `NUXT_CLASH_SOURCES_YAML` for serverless deployments such as Vercel.
 
 Each subscription must return a Clash/Mihomo YAML document containing a non-empty `proxies` list. Plain URI/Base64 subscriptions and documents containing only remote `proxy-providers` are not converted by this server. Standalone nodes use the standard [Mihomo proxy YAML format](https://wiki.metacubex.one/config/proxies/); fields such as `uuid`, `sni`, `reality-opts`, and transport options are retained. Convert sharing links such as `vless://` to their corresponding YAML entries first.
 

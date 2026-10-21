@@ -5,9 +5,9 @@ import type { AddressInfo } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { $fetch, fetch, setup } from '@nuxt/test-utils/e2e'
+import { $fetch, fetch, setup, startServer } from '@nuxt/test-utils/e2e'
 import * as yaml from 'js-yaml'
-import { afterAll, beforeEach, describe, expect, test } from 'vitest'
+import { afterAll, afterEach, beforeEach, describe, expect, test } from 'vitest'
 import type { ClashDocument } from '../../server/clash/config'
 
 interface GatewayRequest {
@@ -170,6 +170,7 @@ const testRuntimeConfig = {
   aiModelChatQuality: 'test-quality-group',
   aiModelReasoning: 'test-reasoning-group',
   clashSourcesFile,
+  clashSourcesYaml: '',
   clashSubKey: 'test-private-key',
   freeClashSubUrl: clashSourceUrl('a'),
   clashSubUrl: clashSourceUrl('private'),
@@ -464,6 +465,91 @@ describe('server API', async () => {
 
       expect(response.status).toBe(500)
       expect(text).not.toContain('local-secret-token')
+    })
+  })
+
+  describe('Clash inline YAML environment configuration', () => {
+    beforeEach(async () => {
+      await writeClashFixture()
+    })
+
+    afterEach(async () => {
+      await writeClashFixture()
+      await startServer()
+    })
+
+    test('loads complete multiline YAML at runtime without a local file', async () => {
+      const inline = clashFixture()
+      inline.default.subscriptions[0]!.name = 'ENV-A'
+      inline.default.subscriptions[1]!.name = 'ENV-B'
+      inline.default.proxies[0] = { ...manualNode, name: '环境变量节点' }
+      inline.private.proxies[0]!.name = '环境变量私有节点'
+
+      await startServer({
+        env: {
+          NUXT_CLASH_SOURCES_YAML: yaml.dump(inline),
+          NUXT_CLASH_SOURCES_FILE: join(clashTemporaryDirectory, 'not-present.yaml'),
+        },
+      })
+
+      const response = await fetch('/api/c')
+      const text = await response.text()
+      const config = yaml.load(text) as ClashDocument
+      expect(response.status).toBe(200)
+      expect(config.proxies?.map(proxy => proxy.name)).toEqual([
+        '环境变量节点', '[ENV-A] 美国 01', '[ENV-A] 日本 01', '[ENV-B] 美国 01',
+      ])
+      expect(text).not.toContain(fixtureCredentials.standalonePrivate)
+      expect(text).not.toContain(fixtureCredentials.upstreamPrivate)
+
+      const privateResponse = await fetch('/api/c?k=test-private-key')
+      const privateConfig = yaml.load(await privateResponse.text()) as ClashDocument
+      expect(privateResponse.status).toBe(200)
+      expect(privateConfig.proxies?.map(proxy => proxy.name)).toEqual(['环境变量私有节点', '[私有源] 私有节点'])
+
+      const html = await $fetch<string>('/')
+      expect(html).not.toContain(fixtureCredentials.standalonePrivate)
+      expect(html).not.toContain(fixtureCredentials.upstreamPrivate)
+      expect(html).not.toContain('环境变量私有节点')
+      expect(html).not.toContain('clashSourcesYaml')
+    })
+
+    test('prioritizes inline YAML over a malformed local file', async () => {
+      await writeFile(clashSourcesFile, 'private: [invalid-local-yaml', 'utf8')
+      await startServer({
+        env: { NUXT_CLASH_SOURCES_YAML: yaml.dump({ default: { proxies: [manualNode] } }) },
+      })
+
+      const response = await fetch('/api/c')
+      const config = yaml.load(await response.text()) as ClashDocument
+      expect(response.status).toBe(200)
+      expect(config.proxies).toEqual([manualNode])
+    })
+
+    test.each(['syntax', 'schema'])('rejects invalid inline YAML (%s) without leaking values or falling back', async (kind) => {
+      const marker = randomUUID()
+      const source = kind === 'syntax'
+        ? `private:\n  proxies: [${marker}`
+        : yaml.dump({ private: { subscriptions: [{ name: 'invalid', url: `file:///${marker}` }] } })
+
+      await startServer({ env: { NUXT_CLASH_SOURCES_YAML: source } })
+
+      const response = await fetch('/api/c')
+      const text = await response.text()
+      expect(response.status).toBe(500)
+      expect(text).not.toContain(marker)
+      expect(text).not.toContain(fixtureCredentials.standalonePublic)
+    })
+
+    test('keeps file configuration enabled when inline YAML is whitespace-only', async () => {
+      await startServer({ env: { NUXT_CLASH_SOURCES_YAML: ' \n\t ' } })
+      const response = await fetch('/api/c')
+      const config = yaml.load(await response.text()) as ClashDocument
+
+      expect(response.status).toBe(200)
+      expect(config.proxies?.map(proxy => proxy.name)).toEqual([
+        '独立节点', '[A] 美国 01', '[A] 日本 01', '[B] 美国 01',
+      ])
     })
   })
 })
